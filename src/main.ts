@@ -1,7 +1,8 @@
 import express from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
-import { fetchNameList } from "./functions/fetch-name-list";
+import { Room } from "./class/Room";
+import { User } from "./class/User";
 require("dotenv").config();
 
 const app = express();
@@ -9,7 +10,7 @@ const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
     origin: `http://localhost:3000`,
-    methods: ["GET", "POST"],
+    methods: [`GET`, `POST`],
   },
 });
 
@@ -19,20 +20,28 @@ app.get(`/`, (_req, res) => {
   res.send(`🚀 Server listening on port:${PORT} 🚀`);
 });
 
-io.on("connection", (socket) => {
-  console.log(`A USER CONNECTED ✌️`, socket.id);
+io.on(`connection`, (socket) => {
+  console.log(`NEW USER CONNECTED ✌️`, socket.id);
 
   /**
    * Event: New participant joins the room.
    */
-  socket.on(`join`, async (name) => {
-    // NOTE: update data.
-    socket.data.name = name;
+  socket.on(
+    `join`,
+    async ({ userName, roomId }: { userName: string; roomId: string }) => {
+      console.log(userName, roomId);
 
-    // NOTE: emit nameList to all sockets.
-    const nameList = await fetchNameList(io);
-    io.emit(`update-name-list`, nameList);
-  });
+      // TODO: roomId をもとに DB から Room クラスをつくる
+      // TODO: DynamoDB にテーブルを作って接続する!!
+      const room = new Room(roomId, new User(userName));
+
+      // NOTE: add user to room
+      room.addUser(new User(userName));
+
+      // NOTE: emit userNameList to all sockets.
+      io.emit(`update-user-name-list`, room.userNameList());
+    }
+  );
 
   /**
    * Event: Disconnect
