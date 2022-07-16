@@ -6,6 +6,11 @@ import { User, UserName } from "./user";
 export type RoomProps = {
     roomId: RoomId;
     masterName: UserName;
+    userNameList?: UserName[];
+    isStarted?: boolean;
+    isEnded?: boolean;
+    winner?: UserName;
+    winnerHand?: HandType;
 };
 
 export class Room extends Entity<RoomId> {
@@ -14,18 +19,22 @@ export class Room extends Entity<RoomId> {
     private readonly _userList: User[];
 
     // status
-    private readonly _isStarted: boolean = false;
-    private readonly _isEnded: boolean = false;
+    private readonly _isStarted: boolean;
+    private readonly _isEnded: boolean;
 
     // winner
-    private readonly _winner?: UserName = undefined;
-    private readonly _winnerHand?: HandType = undefined;
+    private readonly _winner?: UserName;
+    private readonly _winnerHand?: HandType;
 
     constructor(props: RoomProps) {
         super(props.roomId);
 
         this._masterName = props.masterName;
-        this._userList = [];
+        this._userList = props.userNameList?.map((userName) => new User(userName)) ?? [];
+        this._isStarted = props.isStarted ?? false;
+        this._isEnded = props.isEnded ?? false;
+        this._winner = props.winner;
+        this._winnerHand = props.winnerHand;
     }
 
     addUser(user: User): void {
@@ -42,7 +51,7 @@ export class Room extends Entity<RoomId> {
 
     public toRepository() {
         return {
-            roomId: this.id,
+            roomId: this.id.value,
             masterName: this._masterName,
             userNameList: this._userList.map((user) => user.userName()),
             isStarted: this._isStarted,

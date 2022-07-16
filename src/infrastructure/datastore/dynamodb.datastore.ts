@@ -6,6 +6,13 @@ type QueryParams = {
     keyName: string;
     attributeValues: { sign: Sign; values: (string | number)[] };
 };
+
+export type QueryResult<T> = {
+    Items: T[];
+    Count: number;
+    ScannedCount: number;
+};
+
 export class DynamoDBDataStore {
     private readonly _docClient: DocumentClient;
     private dynamoDbTableName = (tableName: string) => `${tableName}`;
@@ -33,7 +40,29 @@ export class DynamoDBDataStore {
             this._docClient.put(params, (err) => {
                 if (err) {
                     console.log(item);
-                    return reject(new Error(`Unable to add item. Error JSON:${JSON.stringify(err, null, 2)}`));
+                    return reject(new Error(`Unable to add item. Error JSON: ${JSON.stringify(err, null, 2)}`));
+                }
+                return resolve();
+            });
+        });
+    }
+
+    public async update(
+        tableName: string,
+        key: DocumentClient.Key,
+        updateExpression: DocumentClient.UpdateExpression,
+        expressionAttributeValues: DocumentClient.ExpressionAttributeValueMap,
+    ): Promise<void> {
+        const params: DocumentClient.UpdateItemInput = {
+            TableName: this.dynamoDbTableName(tableName),
+            Key: key,
+            UpdateExpression: updateExpression,
+            ExpressionAttributeValues: expressionAttributeValues,
+        };
+        return new Promise((resolve, reject) => {
+            this._docClient.update(params, (err) => {
+                if (err) {
+                    return reject(new Error(`Unable to update item. Error JSON: ${JSON.stringify(err, null, 2)}`));
                 }
                 return resolve();
             });
@@ -94,7 +123,7 @@ export class DynamoDBDataStore {
         return new Promise((resolve, reject) => {
             this._docClient.query(queryParams, (err, data) => {
                 if (err) {
-                    return reject(new Error(`Unable to query item. Error JSON:${JSON.stringify(err, null, 2)}`));
+                    return reject(new Error(`Unable to query item. Error JSON: ${JSON.stringify(err, null, 2)}`));
                 }
                 return resolve(data);
             });
@@ -126,7 +155,7 @@ export class DynamoDBDataStore {
         return new Promise((resolve, reject) => {
             this._docClient.query(queryParams, (err, data) => {
                 if (err) {
-                    return reject(new Error(`Unable to query item. Error JSON:${JSON.stringify(err, null, 2)}`));
+                    return reject(new Error(`Unable to query item. Error JSON: ${JSON.stringify(err, null, 2)}`));
                 }
                 return resolve(data);
             });
@@ -153,7 +182,7 @@ export class DynamoDBDataStore {
         return new Promise((resolve, reject) => {
             this._docClient.delete(deleteParams, (err, data) => {
                 if (err) {
-                    return reject(new Error(`Unable to delete item. Error JSON:${JSON.stringify(err, null, 2)}`));
+                    return reject(new Error(`Unable to delete item. Error JSON: ${JSON.stringify(err, null, 2)}`));
                 }
                 return resolve(data);
             });

@@ -4,5 +4,6 @@ import { RoomId } from "../model/room-id.value";
 export interface RoomRepositoryInterface {
     generateNewRoomId(): Promise<RoomId>;
     fetchRoom(roomId: RoomId): Promise<Room | undefined>;
-    saveRoom(room: Room): Promise<void>;
+    createRoom(room: Room): Promise<void>;
+    updateRoomUserNameList(room: Room): Promise<void>;
 }

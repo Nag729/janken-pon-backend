@@ -20,11 +20,19 @@ export class RoomController {
         return roomId;
     }
 
-    public async handleJoin(roomId: RoomId, userName: UserName): Promise<UserName[]> {
-        const room: Room = (await this._roomRepository.fetchRoom(roomId)) ?? new Room({ roomId, masterName: userName });
-        room.addUser(new User(userName));
+    public async createRoom(roomId: RoomId, userName: UserName): Promise<void> {
+        const newRoom: Room = new Room({ roomId, masterName: userName });
+        await this._roomRepository.createRoom(newRoom);
+    }
 
-        await this._roomRepository.saveRoom(room);
+    public async joinToRoom(roomId: RoomId, userName: UserName): Promise<UserName[]> {
+        const room: Room | undefined = await this._roomRepository.fetchRoom(roomId);
+        if (room === undefined) {
+            throw new Error(`Not found roomId: ${roomId.value}`);
+        }
+
+        room.addUser(new User(userName));
+        await this._roomRepository.updateRoomUserNameList(room);
         return room.userNameList();
     }
 }

@@ -31,12 +31,19 @@ io.on(`connection`, (socket) => {
     console.log(`NEW USER CONNECTED ✌️`, socket.id);
 
     /**
+     * EVENT: Create New Room
+     */
+    socket.on(`create-room`, async ({ roomId, userName }: { roomId: string; userName: string }) => {
+        await roomController.createRoom(new RoomId(roomId), userName);
+        io.emit(`created-room`, { roomId });
+    });
+
+    /**
      * Event: New participant joins the room.
      */
-    socket.on(`join`, async ({ roomId, userName }: { roomId: string; userName: string }) => {
-        console.log(roomId, userName);
-        const userNameList: string[] = await roomController.handleJoin(new RoomId(roomId), userName);
-        io.emit(`update-user-name-list`, userNameList); // NOTE: emit userNameList to all sockets.
+    socket.on(`join-room`, async ({ roomId, userName }: { roomId: string; userName: string }) => {
+        const userNameList: string[] = await roomController.joinToRoom(new RoomId(roomId), userName);
+        io.emit(`update-user-name-list`, { userNameList });
     });
 
     /**
