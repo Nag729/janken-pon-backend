@@ -1,6 +1,6 @@
-import { Id } from "./id";
+import { StrId } from "./str-id";
 
-export class Entity<T extends Id> {
+export class Entity<T extends StrId> {
     public readonly id: T;
 
     constructor(id: T) {
