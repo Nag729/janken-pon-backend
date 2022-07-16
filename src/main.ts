@@ -1,3 +1,4 @@
+import cors from "cors";
 import express from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
@@ -6,6 +7,9 @@ import { RoomId } from "./domain/model/room-id.value";
 require("dotenv").config();
 
 const app = express();
+app.use(cors());
+app.use(express.json());
+
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
     cors: {
@@ -24,19 +28,24 @@ app.get(`/`, (_req, res) => {
     res.send(`🚀 Server listening on port:${PORT} 🚀`);
 });
 
+app.post(`/create/room`, async (req, res) => {
+    console.log(`req.body:`, req.body);
+    const { roomId, userName } = req.body as { roomId: string; userName: string };
+    await roomController.createRoom(new RoomId(roomId), userName);
+    res.send(`🚀 Room created: ${roomId} 🚀`);
+});
+
+app.get(`/check/game-master`, async (req, res) => {
+    const { roomId, userName } = req.query as { roomId: string; userName: string };
+    const isGameMaster = await roomController.isGameMaster(new RoomId(roomId), userName);
+    res.send({ isGameMaster });
+});
+
 /**
  * Socket.io
  */
 io.on(`connection`, (socket) => {
     console.log(`NEW USER CONNECTED ✌️`, socket.id);
-
-    /**
-     * EVENT: Create New Room
-     */
-    socket.on(`create-room`, async ({ roomId, userName }: { roomId: string; userName: string }) => {
-        await roomController.createRoom(new RoomId(roomId), userName);
-        io.emit(`created-room`, { roomId });
-    });
 
     /**
      * Event: New participant joins the room.
@@ -49,7 +58,9 @@ io.on(`connection`, (socket) => {
     /**
      * Event: Disconnect
      */
-    socket.on(`disconnect`, () => {
+    socket.on(`disconnect`, (reason) => {
+        // TODO: 接続されてる人を見てその人を部屋から外す？
+        console.log(reason);
         console.log(`USER DISCONNECTED 👋`);
     });
 });

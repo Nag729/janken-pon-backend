@@ -49,6 +49,10 @@ export class Room extends Entity<RoomId> {
         return this._userList.map((user) => user.userName());
     }
 
+    public isGameMaster(userName: UserName): boolean {
+        return this._masterName === userName;
+    }
+
     public toRepository() {
         return {
             roomId: this.id.value,

@@ -35,4 +35,9 @@ export class RoomController {
         await this._roomRepository.updateRoomUserNameList(room);
         return room.userNameList();
     }
+
+    public async isGameMaster(roomId: RoomId, userName: UserName): Promise<boolean> {
+        const room: Room | undefined = await this._roomRepository.fetchRoom(roomId);
+        return room ? room.isGameMaster(userName) : false;
+    }
 }
