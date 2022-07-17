@@ -1,6 +1,6 @@
 import { Hand } from "./hand.value";
 import { RoomId } from "./room-id.value";
-import { RpsBattle, UserHand } from "./rps-battle.value";
+import { RpsBattle } from "./rps-battle.value";
 import { Entity } from "./shared/entity";
 import { User, UserName } from "./user.value";
 
@@ -110,12 +110,36 @@ export class Room extends Entity<RoomId> {
         battle.addUserHand(userName, hand);
     }
 
-    public currentUserHandList(): UserHand[] {
+    public isReadyToJudge(): boolean {
+        const battle = this.currentBattle();
+        if (battle === undefined) {
+            return false;
+        }
+        return battle.userHandList().length === this._userList.length;
+    }
+
+    public judgeBattle(): UserName[] {
         const battle = this.currentBattle();
         if (battle === undefined) {
             return [];
         }
-        return battle.userHandList();
+
+        const isReadyToJudge = battle.userHandList().length === this._userList.length;
+        if (!isReadyToJudge) {
+            return [];
+        }
+
+        // TODO: 勝者が 2 人以上なら次のラウンドへ...
+        const winnerList: UserName[] = battle.judge();
+        return winnerList;
+    }
+
+    public chosenUserNameList(): UserName[] {
+        const battle = this.currentBattle();
+        if (battle === undefined) {
+            return [];
+        }
+        return battle.userHandList().map((userHand) => userHand.userName);
     }
 
     public toRepository() {

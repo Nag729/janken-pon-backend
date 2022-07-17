@@ -1,4 +1,5 @@
 import { Hand } from "./hand.value";
+import { RpsBattleJudgeService } from "./rps-battle-judge.service";
 import { ValueObject } from "./shared/value-object";
 import { UserName } from "./user.value";
 const equal = require("deep-equal");
@@ -32,6 +33,10 @@ export class RpsBattle implements ValueObject<RpsBattleProps> {
 
     public userHandList(): UserHand[] {
         return this._userHandList;
+    }
+
+    public judge(): UserName[] {
+        return RpsBattleJudgeService.judge(this._userHandList);
     }
 
     public toObject() {

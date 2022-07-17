@@ -1,10 +1,9 @@
 import { RoomRepositoryInterface } from "../../domain/interface/room-repository.interface";
-import { Room } from "../../domain/model/room.entity";
+import { Hand } from "../../domain/model/hand.value";
 import { RoomId } from "../../domain/model/room-id.value";
+import { Room } from "../../domain/model/room.entity";
 import { User, UserName } from "../../domain/model/user.value";
 import { RoomRepository } from "../../infrastructure/repository/room-repository";
-import { Hand } from "../../domain/model/hand.value";
-import { UserHand } from "../../domain/model/rps-battle.value";
 
 export interface RoomUsecaseDependencies {
     roomRepository?: RoomRepositoryInterface;
@@ -75,7 +74,7 @@ export class RoomUsecase {
         await this._roomRepository.updateRpsBattleList(room);
     }
 
-    public async chooseHand(roomId: RoomId, userName: UserName, hand: Hand): Promise<UserHand[]> {
+    public async chooseHand(roomId: RoomId, userName: UserName, hand: Hand): Promise<Room> {
         const room: Room | undefined = await this._roomRepository.fetchRoom(roomId);
         if (room === undefined) {
             throw new Error(`Not found roomId: ${roomId.value}`);
@@ -83,7 +82,22 @@ export class RoomUsecase {
 
         room.chooseHand(userName, hand);
         await this._roomRepository.updateRpsBattleList(room);
+        return room;
+    }
 
-        return room.currentUserHandList();
+    public async isReadyToJudge(room: Room): Promise<boolean> {
+        return room.isReadyToJudge();
+    }
+
+    public async judgeBattle(room: Room): Promise<UserName[]> {
+        const winnerList: UserName[] = room.judgeBattle();
+
+        // draw
+        if (winnerList.length === 0) {
+            room.startNextRound();
+            await this._roomRepository.updateRpsBattleList(room);
+        }
+
+        return winnerList;
     }
 }
