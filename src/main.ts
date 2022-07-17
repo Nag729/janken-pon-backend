@@ -3,7 +3,9 @@ import express from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import { RoomUsecase } from "./application/usecase/room-usecase";
+import { Hand } from "./domain/model/hand.value";
 import { RoomId } from "./domain/model/room-id.value";
+import { UserHand } from "./domain/model/rps-battle.value";
 require("dotenv").config();
 
 const app = express();
@@ -30,14 +32,14 @@ app.get(`/`, (_, res) => {
 
 app.post(`/generate/room-id`, async (_, res) => {
     const newRoomId: RoomId = await roomUsecase.generateNewRoomId();
-    console.log(`Generate new roomId: ${newRoomId.value}`);
+    console.log(`🚀 ROOM_ID GENERATED: ${newRoomId.value} 🚀`);
     res.send(newRoomId.value);
 });
 
 app.post(`/create/room`, async (req, res) => {
     const { roomId } = req.body as { roomId: string };
     await roomUsecase.createRoom(new RoomId(roomId));
-    res.send(`🚀 Room created: ${roomId} 🚀`);
+    res.send(`🚀 ROOM CREATED: ${roomId} 🚀`);
 });
 
 app.post(`/verify/room`, async (req, res) => {
@@ -62,9 +64,27 @@ io.on(`connection`, (socket) => {
      * Event: Joins to Socket.IO Room
      */
     socket.on(`room`, async ({ roomId, userName }: { roomId: string; userName: string }) => {
+        // TODO: すでにスタートしてる部屋には参加できないようにする
+
         socket.join(roomId);
         const userNameList: string[] = await roomUsecase.joinRoom(new RoomId(roomId), userName);
-        io.sockets.in(roomId).emit(`update-user-name-list`, { userNameList });
+        io.sockets.in(roomId).emit(`user-name-list-updated`, { userNameList });
+
+        /**
+         * Event: Start RPS
+         */
+        socket.on(`start-rps`, async () => {
+            await roomUsecase.startRps(new RoomId(roomId));
+            io.sockets.in(roomId).emit(`rps-started`);
+        });
+
+        /**
+         * Event: Choose Hand by User
+         */
+        socket.on(`choose-hand`, async ({ hand }: { hand: Hand }) => {
+            const latestUserHandList: UserHand[] = await roomUsecase.chooseHand(new RoomId(roomId), userName, hand);
+            io.sockets.in(roomId).emit(`rps-hand-chosen`, latestUserHandList);
+        });
 
         /**
          * Event: Disconnect
@@ -73,11 +93,11 @@ io.on(`connection`, (socket) => {
             console.log(`USER DISCONNECTED 👋`, roomId, userName);
             // NOTE: notify other users in the room.
             const userNameList: string[] = await roomUsecase.leaveRoom(new RoomId(roomId), userName);
-            io.sockets.in(roomId).emit(`update-user-name-list`, { userNameList });
+            io.sockets.in(roomId).emit(`user-name-list-updated`, { userNameList });
         });
     });
 });
 
 httpServer.listen(PORT, () => {
-    console.log(`🚀 Server listening on port:${PORT} 🚀`);
+    console.log(`🚀 SERVER LISTENING ON PORT:${PORT} 🚀`);
 });

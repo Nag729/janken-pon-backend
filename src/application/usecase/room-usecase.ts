@@ -1,8 +1,10 @@
 import { RoomRepositoryInterface } from "../../domain/interface/room-repository.interface";
-import { Room } from "../../domain/model/room";
+import { Room } from "../../domain/model/room.entity";
 import { RoomId } from "../../domain/model/room-id.value";
-import { User, UserName } from "../../domain/model/user";
+import { User, UserName } from "../../domain/model/user.value";
 import { RoomRepository } from "../../infrastructure/repository/room-repository";
+import { Hand } from "../../domain/model/hand.value";
+import { UserHand } from "../../domain/model/rps-battle.value";
 
 export interface RoomUsecaseDependencies {
     roomRepository?: RoomRepositoryInterface;
@@ -43,7 +45,7 @@ export class RoomUsecase {
             throw new Error(`Not found roomId: ${roomId.value}`);
         }
 
-        room.addUser(new User(userName));
+        room.addUser(new User({ userName }));
         await this._roomRepository.updateRoomUserNameList(room);
         return room.userNameList();
     }
@@ -54,8 +56,34 @@ export class RoomUsecase {
             throw new Error(`Not found roomId: ${roomId.value}`);
         }
 
-        room.removeUser(new User(userName));
+        room.removeUser(new User({ userName }));
         await this._roomRepository.updateRoomUserNameList(room);
         return room.userNameList();
+    }
+
+    public async startRps(roomId: RoomId): Promise<void> {
+        const room: Room | undefined = await this._roomRepository.fetchRoom(roomId);
+        if (room === undefined) {
+            throw new Error(`Not found roomId: ${roomId.value}`);
+        }
+        if (room.isStarted()) {
+            throw new Error(`Already started roomId: ${roomId.value}`);
+        }
+
+        room.startRps();
+        await this._roomRepository.updateRoomStarted(room);
+        await this._roomRepository.updateRpsBattleList(room);
+    }
+
+    public async chooseHand(roomId: RoomId, userName: UserName, hand: Hand): Promise<UserHand[]> {
+        const room: Room | undefined = await this._roomRepository.fetchRoom(roomId);
+        if (room === undefined) {
+            throw new Error(`Not found roomId: ${roomId.value}`);
+        }
+
+        room.chooseHand(userName, hand);
+        await this._roomRepository.updateRpsBattleList(room);
+
+        return room.currentUserHandList();
     }
 }

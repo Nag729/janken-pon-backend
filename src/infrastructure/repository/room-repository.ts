@@ -1,14 +1,22 @@
 import dayjs from "dayjs";
 import { v4 as uuidv4 } from "uuid";
 import { RoomRepositoryInterface } from "../../domain/interface/room-repository.interface";
-import { HandType } from "../../domain/model/hand";
-import { Room } from "../../domain/model/room";
 import { RoomId } from "../../domain/model/room-id.value";
+import { Room } from "../../domain/model/room.entity";
+import { RpsBattle, UserHand } from "../../domain/model/rps-battle.value";
 import { DynamoDBDataStore, QueryResult } from "../datastore/dynamodb.datastore";
 
 interface RoomRepositoryDependencies {
     dynamoDBDataStore?: DynamoDBDataStore;
 }
+
+type DBRpsBattle = {
+    round: number;
+    userHandList: {
+        userName: string;
+        hand: string;
+    }[];
+};
 
 export type DBRoom = {
     roomId: string;
@@ -16,8 +24,7 @@ export type DBRoom = {
     userNameList: string[];
     isStarted: boolean;
     isEnded: boolean;
-    winner: string | undefined;
-    winnerHand: string | undefined;
+    rpsBattleList: DBRpsBattle[];
 };
 
 export class RoomRepository implements RoomRepositoryInterface {
@@ -30,6 +37,24 @@ export class RoomRepository implements RoomRepositoryInterface {
         this.tableName = `jankenPonRoom`;
     }
 
+    /**
+     * FETCH
+     */
+    public async fetchRoom(roomId: RoomId): Promise<Room | undefined> {
+        const queryResult: QueryResult<DBRoom> = await this.datastore.queryByPrimaryKey({
+            tableName: this.tableName,
+            partitioningKeyParams: {
+                keyName: "roomId",
+                attributeValues: { sign: "=", values: [roomId.value] },
+            },
+        });
+        const room: DBRoom | undefined = queryResult.Items.pop();
+        return room ? this.createRoomFromDB(room) : undefined;
+    }
+
+    /**
+     * CREATE
+     */
     public async generateNewRoomId(): Promise<RoomId> {
         let roomId: RoomId;
 
@@ -43,18 +68,6 @@ export class RoomRepository implements RoomRepositoryInterface {
         return roomId!;
     }
 
-    public async fetchRoom(roomId: RoomId): Promise<Room | undefined> {
-        const queryResult: QueryResult<DBRoom> = await this.datastore.queryByPrimaryKey({
-            tableName: this.tableName,
-            partitioningKeyParams: {
-                keyName: "roomId",
-                attributeValues: { sign: "=", values: [roomId.value] },
-            },
-        });
-        const room: DBRoom | undefined = queryResult.Items.pop();
-        return room ? this.createRoomFromDB(room) : undefined;
-    }
-
     public async createRoom(room: Room): Promise<void> {
         const repo = room.toRepository();
         const unixtime = dayjs().unix();
@@ -62,6 +75,9 @@ export class RoomRepository implements RoomRepositoryInterface {
         await this.datastore.put(this.tableName, { ...repo, unixtime }, unixtime + this.ttl);
     }
 
+    /**
+     * UPDATE
+     */
     public async updateRoomUserNameList(room: Room): Promise<void> {
         const userNameList = room.toRepository().userNameList;
         await this.datastore.update(
@@ -76,14 +92,48 @@ export class RoomRepository implements RoomRepositoryInterface {
         );
     }
 
-    private createRoomFromDB(dbRoom: DBRoom): Room {
+    public async updateRoomStarted(room: Room): Promise<void> {
+        const isStarted = room.toRepository().isStarted;
+        await this.datastore.update(
+            this.tableName,
+            {
+                roomId: room.id.value,
+            },
+            `set isStarted = :isStarted`,
+            {
+                ":isStarted": isStarted,
+            },
+        );
+    }
+
+    public async updateRpsBattleList(room: Room): Promise<void> {
+        const rpsBattleList = room.toRepository().rpsBattleList;
+        await this.datastore.update(
+            this.tableName,
+            {
+                roomId: room.id.value,
+            },
+            `set rpsBattleList = :rpsBattleList`,
+            {
+                ":rpsBattleList": rpsBattleList,
+            },
+        );
+    }
+
+    private createRoomFromDB(db: DBRoom): Room {
         return new Room({
-            roomId: new RoomId(dbRoom.roomId),
-            userNameList: dbRoom.userNameList,
-            isStarted: dbRoom.isStarted,
-            isEnded: dbRoom.isEnded,
-            winner: dbRoom.winner,
-            winnerHand: (dbRoom.winnerHand as HandType) ?? undefined,
+            roomId: new RoomId(db.roomId),
+            userNameList: db.userNameList,
+            isStarted: db.isStarted,
+            isEnded: db.isEnded,
+            rpsBattleList: db.rpsBattleList.map(this.createRpsBattleFromDB),
+        });
+    }
+
+    private createRpsBattleFromDB(db: DBRpsBattle): RpsBattle {
+        return new RpsBattle({
+            round: db.round,
+            userHandList: db.userHandList as UserHand[],
         });
     }
 }

@@ -39,7 +39,6 @@ export class DynamoDBDataStore {
         return new Promise((resolve, reject) => {
             this._docClient.put(params, (err) => {
                 if (err) {
-                    console.log(item);
                     return reject(new Error(`Unable to add item. Error JSON: ${JSON.stringify(err, null, 2)}`));
                 }
                 return resolve();
