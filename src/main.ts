@@ -24,21 +24,20 @@ const PORT = process.env.PORT || 3001;
  */
 const roomController = new RoomController({});
 
-app.get(`/`, (_req, res) => {
+app.get(`/`, (_, res) => {
     res.send(`🚀 Server listening on port:${PORT} 🚀`);
 });
 
-app.post(`/create/room`, async (req, res) => {
-    console.log(`req.body:`, req.body);
-    const { roomId, userName } = req.body as { roomId: string; userName: string };
-    await roomController.createRoom(new RoomId(roomId), userName);
-    res.send(`🚀 Room created: ${roomId} 🚀`);
+app.post(`/generate/room-id`, async (_, res) => {
+    const newRoomId: RoomId = await roomController.generateNewRoomId();
+    console.log(`Generate new roomId: ${newRoomId.value}`);
+    res.send(newRoomId.value);
 });
 
-app.get(`/check/game-master`, async (req, res) => {
-    const { roomId, userName } = req.query as { roomId: string; userName: string };
-    const isGameMaster = await roomController.isGameMaster(new RoomId(roomId), userName);
-    res.send({ isGameMaster });
+app.post(`/create/room`, async (req, res) => {
+    const { roomId } = req.body as { roomId: string; userName: string };
+    await roomController.createRoom(new RoomId(roomId));
+    res.send(`🚀 Room created: ${roomId} 🚀`);
 });
 
 /**

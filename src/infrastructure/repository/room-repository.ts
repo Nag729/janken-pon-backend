@@ -1,4 +1,5 @@
 import dayjs from "dayjs";
+import { v4 as uuidv4 } from "uuid";
 import { RoomRepositoryInterface } from "../../domain/interface/room-repository.interface";
 import { HandType } from "../../domain/model/hand";
 import { Room } from "../../domain/model/room";
@@ -30,8 +31,16 @@ export class RoomRepository implements RoomRepositoryInterface {
     }
 
     public async generateNewRoomId(): Promise<RoomId> {
-        // TODO:
-        throw new Error("Not implemented");
+        let roomId: RoomId;
+
+        for (let i = 0; i < 3; i++) {
+            roomId = new RoomId(uuidv4());
+            const existRoom: boolean = !!(await this.fetchRoom(roomId));
+            if (!existRoom) {
+                break;
+            }
+        }
+        return roomId!;
     }
 
     public async fetchRoom(roomId: RoomId): Promise<Room | undefined> {
@@ -70,7 +79,6 @@ export class RoomRepository implements RoomRepositoryInterface {
     private createRoomFromDB(dbRoom: DBRoom): Room {
         return new Room({
             roomId: new RoomId(dbRoom.roomId),
-            masterName: dbRoom.masterName,
             userNameList: dbRoom.userNameList,
             isStarted: dbRoom.isStarted,
             isEnded: dbRoom.isEnded,

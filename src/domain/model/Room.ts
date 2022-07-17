@@ -5,7 +5,6 @@ import { User, UserName } from "./user";
 
 export type RoomProps = {
     roomId: RoomId;
-    masterName: UserName;
     userNameList?: UserName[];
     isStarted?: boolean;
     isEnded?: boolean;
@@ -15,7 +14,6 @@ export type RoomProps = {
 
 export class Room extends Entity<RoomId> {
     // room user
-    private readonly _masterName: UserName;
     private readonly _userList: User[];
 
     // status
@@ -29,7 +27,6 @@ export class Room extends Entity<RoomId> {
     constructor(props: RoomProps) {
         super(props.roomId);
 
-        this._masterName = props.masterName;
         this._userList = props.userNameList?.map((userName) => new User(userName)) ?? [];
         this._isStarted = props.isStarted ?? false;
         this._isEnded = props.isEnded ?? false;
@@ -49,14 +46,9 @@ export class Room extends Entity<RoomId> {
         return this._userList.map((user) => user.userName());
     }
 
-    public isGameMaster(userName: UserName): boolean {
-        return this._masterName === userName;
-    }
-
     public toRepository() {
         return {
             roomId: this.id.value,
-            masterName: this._masterName,
             userNameList: this._userList.map((user) => user.userName()),
             isStarted: this._isStarted,
             isEnded: this._isEnded,

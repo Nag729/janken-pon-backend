@@ -16,12 +16,11 @@ export class RoomController {
     }
 
     public async generateNewRoomId(): Promise<RoomId> {
-        const roomId: RoomId = await this._roomRepository.generateNewRoomId();
-        return roomId;
+        return this._roomRepository.generateNewRoomId();
     }
 
-    public async createRoom(roomId: RoomId, userName: UserName): Promise<void> {
-        const newRoom: Room = new Room({ roomId, masterName: userName });
+    public async createRoom(roomId: RoomId): Promise<void> {
+        const newRoom: Room = new Room({ roomId });
         await this._roomRepository.createRoom(newRoom);
     }
 
@@ -34,10 +33,5 @@ export class RoomController {
         room.addUser(new User(userName));
         await this._roomRepository.updateRoomUserNameList(room);
         return room.userNameList();
-    }
-
-    public async isGameMaster(roomId: RoomId, userName: UserName): Promise<boolean> {
-        const room: Room | undefined = await this._roomRepository.fetchRoom(roomId);
-        return room ? room.isGameMaster(userName) : false;
     }
 }
