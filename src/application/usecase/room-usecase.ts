@@ -4,14 +4,14 @@ import { RoomId } from "../../domain/model/room-id.value";
 import { User, UserName } from "../../domain/model/user";
 import { RoomRepository } from "../../infrastructure/repository/room-repository";
 
-export interface RoomControllerDependencies {
+export interface RoomUsecaseDependencies {
     roomRepository?: RoomRepositoryInterface;
 }
 
-export class RoomController {
+export class RoomUsecase {
     private readonly _roomRepository: RoomRepositoryInterface;
 
-    constructor({ roomRepository = new RoomRepository({}) }: RoomControllerDependencies) {
+    constructor({ roomRepository = new RoomRepository({}) }: RoomUsecaseDependencies) {
         this._roomRepository = roomRepository;
     }
 
@@ -22,6 +22,15 @@ export class RoomController {
     public async createRoom(roomId: RoomId): Promise<void> {
         const newRoom: Room = new Room({ roomId });
         await this._roomRepository.createRoom(newRoom);
+    }
+
+    public async verifyUserName(roomId: RoomId, userName: UserName): Promise<boolean> {
+        const room: Room | undefined = await this._roomRepository.fetchRoom(roomId);
+        if (room === undefined) {
+            throw new Error(`Not found roomId: ${roomId.value}`);
+        }
+
+        return room.verifyUserName(userName);
     }
 
     public async joinToRoom(roomId: RoomId, userName: UserName): Promise<UserName[]> {

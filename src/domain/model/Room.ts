@@ -46,6 +46,11 @@ export class Room extends Entity<RoomId> {
         return this._userList.map((user) => user.userName());
     }
 
+    public verifyUserName(userName: UserName): boolean {
+        const userNameList = this.userNameList();
+        return !userNameList.includes(userName);
+    }
+
     public toRepository() {
         return {
             roomId: this.id.value,

@@ -2,7 +2,7 @@ import cors from "cors";
 import express from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
-import { RoomController } from "./application/controller/room-controller";
+import { RoomUsecase } from "./application/usecase/room-usecase";
 import { RoomId } from "./domain/model/room-id.value";
 require("dotenv").config();
 
@@ -20,24 +20,30 @@ const io = new Server(httpServer, {
 const PORT = process.env.PORT || 3001;
 
 /**
- * Controller
+ * Usecase
  */
-const roomController = new RoomController({});
+const roomUsecase = new RoomUsecase({});
 
 app.get(`/`, (_, res) => {
     res.send(`🚀 Server listening on port:${PORT} 🚀`);
 });
 
 app.post(`/generate/room-id`, async (_, res) => {
-    const newRoomId: RoomId = await roomController.generateNewRoomId();
+    const newRoomId: RoomId = await roomUsecase.generateNewRoomId();
     console.log(`Generate new roomId: ${newRoomId.value}`);
     res.send(newRoomId.value);
 });
 
 app.post(`/create/room`, async (req, res) => {
-    const { roomId } = req.body as { roomId: string; userName: string };
-    await roomController.createRoom(new RoomId(roomId));
+    const { roomId } = req.body as { roomId: string };
+    await roomUsecase.createRoom(new RoomId(roomId));
     res.send(`🚀 Room created: ${roomId} 🚀`);
+});
+
+app.post(`/verify/user-name`, async (req, res) => {
+    const { roomId, userName } = req.body as { roomId: string; userName: string };
+    const isOk: boolean = await roomUsecase.verifyUserName(new RoomId(roomId), userName);
+    res.send(isOk);
 });
 
 /**
@@ -47,11 +53,13 @@ io.on(`connection`, (socket) => {
     console.log(`NEW USER CONNECTED ✌️`, socket.id);
 
     /**
-     * Event: New participant joins the room.
+     * Event: Joins to Socket.IO Room
      */
-    socket.on(`join-room`, async ({ roomId, userName }: { roomId: string; userName: string }) => {
-        const userNameList: string[] = await roomController.joinToRoom(new RoomId(roomId), userName);
-        io.emit(`update-user-name-list`, { userNameList });
+    socket.on(`join-to-room`, async ({ roomId, userName }: { roomId: string; userName: string }) => {
+        // TODO: 存在しない room の場合はエラーにする
+        socket.join(roomId);
+        const userNameList: string[] = await roomUsecase.joinToRoom(new RoomId(roomId), userName);
+        io.sockets.in(roomId).emit(`update-user-name-list`, { userNameList });
     });
 
     /**
