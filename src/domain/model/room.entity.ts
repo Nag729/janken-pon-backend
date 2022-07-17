@@ -1,6 +1,6 @@
 import { Hand } from "./hand.value";
 import { RoomId } from "./room-id.value";
-import { RpsBattle } from "./rps-battle.value";
+import { RpsBattle, UserHand } from "./rps-battle.value";
 import { Entity } from "./shared/entity";
 import { User, UserName } from "./user.value";
 
@@ -10,6 +10,11 @@ export type RoomProps = {
     isStarted?: boolean;
     isEnded?: boolean;
     rpsBattleList?: RpsBattle[];
+};
+
+export type BattleResult = {
+    winnerList: UserName[];
+    userHandList: UserHand[];
 };
 
 export class Room extends Entity<RoomId> {
@@ -118,20 +123,17 @@ export class Room extends Entity<RoomId> {
         return battle.userHandList().length === this._userList.length;
     }
 
-    public judgeBattle(): UserName[] {
+    public judgeBattle(): BattleResult {
         const battle = this.currentBattle();
         if (battle === undefined) {
-            return [];
-        }
-
-        const isReadyToJudge = battle.userHandList().length === this._userList.length;
-        if (!isReadyToJudge) {
-            return [];
+            throw new Error("battle is not found");
         }
 
         // TODO: 勝者が 2 人以上なら次のラウンドへ...
-        const winnerList: UserName[] = battle.judge();
-        return winnerList;
+        return {
+            winnerList: battle.judge(),
+            userHandList: battle.userHandList(),
+        };
     }
 
     public chosenUserNameList(): UserName[] {

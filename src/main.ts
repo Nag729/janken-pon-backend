@@ -5,8 +5,7 @@ import { Server } from "socket.io";
 import { RoomUsecase } from "./application/usecase/room-usecase";
 import { Hand } from "./domain/model/hand.value";
 import { RoomId } from "./domain/model/room-id.value";
-import { Room } from "./domain/model/room.entity";
-import { UserName } from "./domain/model/user.value";
+import { BattleResult, Room } from "./domain/model/room.entity";
 require("dotenv").config();
 
 const app = express();
@@ -83,23 +82,18 @@ io.on(`connection`, (socket) => {
          * Event: Choose Hand by User
          */
         socket.on(`choose-hand`, async ({ hand }: { hand: Hand }) => {
+            console.log(`choose-hand`, { userName, hand });
             const room: Room = await roomUsecase.chooseHand(new RoomId(roomId), userName, hand);
+            io.sockets.in(roomId).emit(`rps-hand-chosen`, {
+                userNameList: room.chosenUserNameList(),
+            });
 
-            const isReadyToJudge: boolean = room.isReadyToJudge();
-            if (!isReadyToJudge) {
-                io.sockets.in(roomId).emit(`rps-hand-chosen`, {
-                    userNameList: room.chosenUserNameList(),
-                });
+            if (!roomUsecase.isReadyToJudge(room)) {
                 return;
             }
-
-            const winnerList: UserName[] = await roomUsecase.judgeBattle(room);
-
-            if (!!winnerList) {
-                io.sockets.in(roomId).emit(`round-finished`, { winnerList });
-            } else {
-                io.sockets.in(roomId).emit(`round-draw`);
-            }
+            const battleResult: BattleResult = await roomUsecase.judgeBattle(room);
+            console.log(`battle-result`, { battleResult });
+            io.sockets.in(roomId).emit(`round-settled`, { battleResult });
         });
 
         /**

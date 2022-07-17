@@ -1,7 +1,7 @@
 import { RoomRepositoryInterface } from "../../domain/interface/room-repository.interface";
 import { Hand } from "../../domain/model/hand.value";
 import { RoomId } from "../../domain/model/room-id.value";
-import { Room } from "../../domain/model/room.entity";
+import { BattleResult, Room } from "../../domain/model/room.entity";
 import { User, UserName } from "../../domain/model/user.value";
 import { RoomRepository } from "../../infrastructure/repository/room-repository";
 
@@ -89,15 +89,14 @@ export class RoomUsecase {
         return room.isReadyToJudge();
     }
 
-    public async judgeBattle(room: Room): Promise<UserName[]> {
-        const winnerList: UserName[] = room.judgeBattle();
+    public async judgeBattle(room: Room): Promise<BattleResult> {
+        const battleResult: BattleResult = room.judgeBattle();
 
         // draw
-        if (winnerList.length === 0) {
+        if (!battleResult.winnerList) {
             room.startNextRound();
             await this._roomRepository.updateRpsBattleList(room);
         }
-
-        return winnerList;
+        return battleResult;
     }
 }
