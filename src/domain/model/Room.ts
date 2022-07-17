@@ -38,6 +38,11 @@ export class Room extends Entity<RoomId> {
         this._userList.push(user);
     }
 
+    removeUser(user: User): void {
+        const removeIndex = this.userNameList().indexOf(user.userName());
+        this._userList.splice(removeIndex, 1);
+    }
+
     public roomId(): RoomId {
         return this.id;
     }

@@ -40,6 +40,12 @@ app.post(`/create/room`, async (req, res) => {
     res.send(`🚀 Room created: ${roomId} 🚀`);
 });
 
+app.post(`/verify/room`, async (req, res) => {
+    const { roomId } = req.body as { roomId: string };
+    const existRoom: boolean = !!(await roomUsecase.fetchRoom(new RoomId(roomId)));
+    res.send(existRoom);
+});
+
 app.post(`/verify/user-name`, async (req, res) => {
     const { roomId, userName } = req.body as { roomId: string; userName: string };
     const isOk: boolean = await roomUsecase.verifyUserName(new RoomId(roomId), userName);
@@ -50,25 +56,25 @@ app.post(`/verify/user-name`, async (req, res) => {
  * Socket.io
  */
 io.on(`connection`, (socket) => {
-    console.log(`NEW USER CONNECTED ✌️`, socket.id);
+    console.log(`NEW USER CONNECTED ✌️`);
 
     /**
      * Event: Joins to Socket.IO Room
      */
-    socket.on(`join-to-room`, async ({ roomId, userName }: { roomId: string; userName: string }) => {
-        // TODO: 存在しない room の場合はエラーにする
+    socket.on(`room`, async ({ roomId, userName }: { roomId: string; userName: string }) => {
         socket.join(roomId);
-        const userNameList: string[] = await roomUsecase.joinToRoom(new RoomId(roomId), userName);
+        const userNameList: string[] = await roomUsecase.joinRoom(new RoomId(roomId), userName);
         io.sockets.in(roomId).emit(`update-user-name-list`, { userNameList });
-    });
 
-    /**
-     * Event: Disconnect
-     */
-    socket.on(`disconnect`, (reason) => {
-        // TODO: 接続されてる人を見てその人を部屋から外す？
-        console.log(reason);
-        console.log(`USER DISCONNECTED 👋`);
+        /**
+         * Event: Disconnect
+         */
+        socket.on(`disconnect`, async () => {
+            console.log(`USER DISCONNECTED 👋`, roomId, userName);
+            // NOTE: notify other users in the room.
+            const userNameList: string[] = await roomUsecase.leaveRoom(new RoomId(roomId), userName);
+            io.sockets.in(roomId).emit(`update-user-name-list`, { userNameList });
+        });
     });
 });
 

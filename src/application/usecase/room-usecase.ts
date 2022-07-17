@@ -24,6 +24,10 @@ export class RoomUsecase {
         await this._roomRepository.createRoom(newRoom);
     }
 
+    public async fetchRoom(roomId: RoomId): Promise<Room | undefined> {
+        return this._roomRepository.fetchRoom(roomId);
+    }
+
     public async verifyUserName(roomId: RoomId, userName: UserName): Promise<boolean> {
         const room: Room | undefined = await this._roomRepository.fetchRoom(roomId);
         if (room === undefined) {
@@ -33,13 +37,24 @@ export class RoomUsecase {
         return room.verifyUserName(userName);
     }
 
-    public async joinToRoom(roomId: RoomId, userName: UserName): Promise<UserName[]> {
+    public async joinRoom(roomId: RoomId, userName: UserName): Promise<UserName[]> {
         const room: Room | undefined = await this._roomRepository.fetchRoom(roomId);
         if (room === undefined) {
             throw new Error(`Not found roomId: ${roomId.value}`);
         }
 
         room.addUser(new User(userName));
+        await this._roomRepository.updateRoomUserNameList(room);
+        return room.userNameList();
+    }
+
+    public async leaveRoom(roomId: RoomId, userName: UserName): Promise<UserName[]> {
+        const room: Room | undefined = await this._roomRepository.fetchRoom(roomId);
+        if (room === undefined) {
+            throw new Error(`Not found roomId: ${roomId.value}`);
+        }
+
+        room.removeUser(new User(userName));
         await this._roomRepository.updateRoomUserNameList(room);
         return room.userNameList();
     }
