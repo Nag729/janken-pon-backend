@@ -41,41 +41,26 @@ export class RoomUsecase {
     }
 
     public async verifyUserName(roomId: RoomId, userName: UserName): Promise<boolean> {
-        const room: Room | undefined = await this._roomRepository.fetchRoom(roomId);
-        if (room === undefined) {
-            throw new Error(`Not found roomId: ${roomId.value}`);
-        }
-
+        const room: Room = await this._roomRepository.fetchRoom(roomId);
         return room.verifyUserName(userName);
     }
 
     public async joinRoom(roomId: RoomId, userName: UserName): Promise<UserName[]> {
-        const room: Room | undefined = await this._roomRepository.fetchRoom(roomId);
-        if (room === undefined) {
-            throw new Error(`Not found roomId: ${roomId.value}`);
-        }
-
+        const room: Room = await this._roomRepository.fetchRoom(roomId);
         room.addUser(new User({ userName }));
         await this._roomRepository.updateRoomUserNameList(room);
         return room.userNameList();
     }
 
     public async leaveRoom(roomId: RoomId, userName: UserName): Promise<UserName[]> {
-        const room: Room | undefined = await this._roomRepository.fetchRoom(roomId);
-        if (room === undefined) {
-            throw new Error(`Not found roomId: ${roomId.value}`);
-        }
-
+        const room: Room = await this._roomRepository.fetchRoom(roomId);
         room.removeUser(new User({ userName }));
         await this._roomRepository.updateRoomUserNameList(room);
         return room.userNameList();
     }
 
     public async startRps(roomId: RoomId): Promise<void> {
-        const room: Room | undefined = await this._roomRepository.fetchRoom(roomId);
-        if (room === undefined) {
-            throw new Error(`Not found roomId: ${roomId.value}`);
-        }
+        const room: Room = await this._roomRepository.fetchRoom(roomId);
         if (room.isStarted()) {
             throw new Error(`Already started roomId: ${roomId.value}`);
         }
@@ -86,11 +71,7 @@ export class RoomUsecase {
     }
 
     public async chooseHand(roomId: RoomId, userName: UserName, hand: Hand): Promise<Room> {
-        const room: Room | undefined = await this._roomRepository.fetchRoom(roomId);
-        if (room === undefined) {
-            throw new Error(`Not found roomId: ${roomId.value}`);
-        }
-
+        const room: Room = await this._roomRepository.fetchRoom(roomId);
         room.chooseHand(userName, hand);
         await this._roomRepository.updateRpsBattleList(room);
         return room;
@@ -102,12 +83,19 @@ export class RoomUsecase {
 
     public async judgeBattle(room: Room): Promise<RoundResult> {
         const roundResult: RoundResult = room.judgeBattle();
-
         const isDraw: boolean = roundResult.roundWinnerList.length === 0;
         if (isDraw) {
             room.startNextRound();
             await this._roomRepository.updateRpsBattleList(room);
         }
         return roundResult;
+    }
+
+    public isCompleted(room: Room): boolean {
+        return room.isCompleted();
+    }
+
+    public winnerUserNameList(room: Room): UserName[] {
+        return room.winnerUserNameList();
     }
 }

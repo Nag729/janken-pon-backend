@@ -22,11 +22,10 @@ export type DBRoom = {
     roomId: string;
     userNameList: string[];
     numberOfWinners: number;
+    isStarted: boolean;
+    rpsBattleList: DBRpsBattle[];
     winnerNameList: string[];
     loserNameList: string[];
-    isStarted: boolean;
-    isEnded: boolean;
-    rpsBattleList: DBRpsBattle[];
 };
 
 export class RoomRepository implements RoomRepositoryInterface {
@@ -42,7 +41,7 @@ export class RoomRepository implements RoomRepositoryInterface {
     /**
      * FETCH
      */
-    public async fetchRoom(roomId: RoomId): Promise<Room | undefined> {
+    public async fetchRoom(roomId: RoomId): Promise<Room> {
         const queryResult: QueryResult<DBRoom> = await this.datastore.queryByPrimaryKey({
             tableName: this.tableName,
             partitioningKeyParams: {
@@ -50,8 +49,12 @@ export class RoomRepository implements RoomRepositoryInterface {
                 attributeValues: { sign: "=", values: [roomId.value] },
             },
         });
+
         const room: DBRoom | undefined = queryResult.Items.pop();
-        return room ? this.createRoomFromDB(room) : undefined;
+        if (room === undefined) {
+            throw new Error(`Room not found: ${roomId.value}`);
+        }
+        return this.createRoomFromDB(room);
     }
 
     /**
@@ -127,11 +130,10 @@ export class RoomRepository implements RoomRepositoryInterface {
             roomId: new RoomId(db.roomId),
             userNameList: db.userNameList,
             numberOfWinners: db.numberOfWinners,
+            isStarted: db.isStarted,
+            rpsBattleList: db.rpsBattleList.map(this.createRpsBattleFromDB),
             winnerNameList: db.winnerNameList,
             loserNameList: db.loserNameList,
-            isStarted: db.isStarted,
-            isEnded: db.isEnded,
-            rpsBattleList: db.rpsBattleList.map(this.createRpsBattleFromDB),
         });
     }
 

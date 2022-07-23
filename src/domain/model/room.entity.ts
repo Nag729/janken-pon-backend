@@ -9,11 +9,10 @@ export type RoomProps = {
     roomId: RoomId;
     userNameList: UserName[];
     numberOfWinners: number;
+    isStarted?: boolean;
+    rpsBattleList?: RpsBattle[];
     winnerNameList?: UserName[];
     loserNameList?: UserName[];
-    isStarted?: boolean;
-    isEnded?: boolean;
-    rpsBattleList?: RpsBattle[];
 };
 
 export type RoundResult = {
@@ -25,28 +24,26 @@ export class Room extends Entity<RoomId> {
     // room user
     private readonly _userList: User[];
 
-    // win or lose
+    // rule
     private readonly _numberOfWinners: number;
-    private readonly _winnerNameList: string[];
-    private readonly _loserNameList: string[];
 
     // room status
     private _isStarted: boolean;
-    private _isEnded: boolean;
 
     // battle
     private _rpsBattleList: RpsBattle[];
+    private _winnerNameList: string[];
+    private _loserNameList: string[];
 
     constructor(props: RoomProps) {
         super(props.roomId);
 
         this._userList = props.userNameList?.map((userName) => new User({ userName }));
         this._numberOfWinners = props.numberOfWinners;
+        this._isStarted = props.isStarted ?? false;
+        this._rpsBattleList = props.rpsBattleList ?? [];
         this._winnerNameList = props.winnerNameList ?? [];
         this._loserNameList = props.loserNameList ?? [];
-        this._isStarted = props.isStarted ?? false;
-        this._isEnded = props.isEnded ?? false;
-        this._rpsBattleList = props.rpsBattleList ?? [];
     }
 
     /**
@@ -97,14 +94,6 @@ export class Room extends Entity<RoomId> {
         this.startNextRound();
     }
 
-    public isEnded(): boolean {
-        return this._isEnded;
-    }
-
-    public endRps(): void {
-        this._isEnded = true;
-    }
-
     /**
      * RPS Battle
      */
@@ -145,7 +134,7 @@ export class Room extends Entity<RoomId> {
             throw new Error("battle is not found");
         }
 
-        // TODO: 勝者が 2 人以上なら次のラウンドへ...
+        // TODO: winner, loser を記録する
         return {
             roundWinnerList: battle.judge(),
             userHandList: battle.userHandList(),
@@ -160,16 +149,23 @@ export class Room extends Entity<RoomId> {
         return battle.userHandList().map((userHand) => userHand.userName);
     }
 
+    public isCompleted(): boolean {
+        return this._winnerNameList.length === this._numberOfWinners;
+    }
+
+    public winnerUserNameList(): UserName[] {
+        return this._winnerNameList;
+    }
+
     public toRepository(): DBRoom {
         return {
             roomId: this.id.value,
             userNameList: this._userList.map((user) => user.userName()),
             numberOfWinners: this._numberOfWinners,
+            isStarted: this._isStarted,
+            rpsBattleList: this._rpsBattleList.map((battle) => battle.toObject()),
             winnerNameList: this._winnerNameList,
             loserNameList: this._loserNameList,
-            isStarted: this._isStarted,
-            isEnded: this._isEnded,
-            rpsBattleList: this._rpsBattleList.map((battle) => battle.toObject()),
         };
     }
 }

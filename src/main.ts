@@ -83,7 +83,6 @@ io.on(`connection`, (socket) => {
          * Event: Choose Hand by User
          */
         socket.on(`choose-hand`, async ({ hand }: { hand: Hand }) => {
-            console.log(`✌️ choose-hand ✌️`, { userName, hand });
             const room: Room = await roomUsecase.chooseHand(new RoomId(roomId), userName, hand);
             io.sockets.in(roomId).emit(`rps-hand-chosen`, {
                 userNameList: room.chosenUserNameList(),
@@ -95,9 +94,14 @@ io.on(`connection`, (socket) => {
             }
 
             const roundResult: RoundResult = await roomUsecase.judgeBattle(room);
-
-            // TODO: 勝者が確定した場合は `round-settled` ではなく、`rps-completed` で通知する
             io.sockets.in(roomId).emit(`round-settled`, { roundResult });
+
+            if (!roomUsecase.isCompleted(room)) {
+                return;
+            }
+
+            const winnerUserNameList = roomUsecase.winnerUserNameList(room);
+            io.sockets.in(roomId).emit(`rps-completed`, { roundResult, winnerUserNameList });
         });
 
         /**
