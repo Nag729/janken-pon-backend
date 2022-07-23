@@ -5,7 +5,7 @@ import { Server } from "socket.io";
 import { RoomError, RoomUsecase } from "./application/usecase/room-usecase";
 import { Hand } from "./domain/model/hand.value";
 import { RoomId } from "./domain/model/room-id.value";
-import { BattleResult, Room } from "./domain/model/room.entity";
+import { RoundResult, Room } from "./domain/model/room.entity";
 require("dotenv").config();
 
 const app = express();
@@ -94,8 +94,10 @@ io.on(`connection`, (socket) => {
                 return;
             }
 
-            const battleResult: BattleResult = await roomUsecase.judgeBattle(room);
-            io.sockets.in(roomId).emit(`round-settled`, { battleResult });
+            const roundResult: RoundResult = await roomUsecase.judgeBattle(room);
+
+            // TODO: 勝者が確定した場合は `round-settled` ではなく、`rps-completed` で通知する
+            io.sockets.in(roomId).emit(`round-settled`, { roundResult });
         });
 
         /**

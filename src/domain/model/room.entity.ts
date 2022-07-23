@@ -16,7 +16,7 @@ export type RoomProps = {
     rpsBattleList?: RpsBattle[];
 };
 
-export type BattleResult = {
+export type RoundResult = {
     roundWinnerList: UserName[];
     userHandList: UserHand[];
 };
@@ -139,7 +139,7 @@ export class Room extends Entity<RoomId> {
         return isAllUserChooseHand;
     }
 
-    public judgeBattle(): BattleResult {
+    public judgeBattle(): RoundResult {
         const battle = this.currentBattle();
         if (battle === undefined) {
             throw new Error("battle is not found");
