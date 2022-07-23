@@ -4,7 +4,6 @@
   "description": "",
   "main": "main.ts",
   "scripts": {
-    "dev": "npx ts-node src/main.ts",
     "dev:watch": "npx ts-node-dev --respawn src/main.ts"
   },
   "repository": {

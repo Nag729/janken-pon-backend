@@ -85,8 +85,8 @@ export class RoomUsecase {
         return room;
     }
 
-    public async isReadyToJudge(room: Room): Promise<boolean> {
-        return room.isReadyToJudge();
+    public isAllUserChooseHand(room: Room): boolean {
+        return room.isAllUserChooseHand();
     }
 
     public async judgeBattle(room: Room): Promise<BattleResult> {

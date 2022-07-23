@@ -115,12 +115,14 @@ export class Room extends Entity<RoomId> {
         battle.addUserHand(userName, hand);
     }
 
-    public isReadyToJudge(): boolean {
+    public isAllUserChooseHand(): boolean {
         const battle = this.currentBattle();
         if (battle === undefined) {
             return false;
         }
-        return battle.userHandList().length === this._userList.length;
+
+        const isAllUserChooseHand = battle.userHandList().length === this._userList.length;
+        return isAllUserChooseHand;
     }
 
     public judgeBattle(): BattleResult {

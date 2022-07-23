@@ -82,17 +82,18 @@ io.on(`connection`, (socket) => {
          * Event: Choose Hand by User
          */
         socket.on(`choose-hand`, async ({ hand }: { hand: Hand }) => {
-            console.log(`choose-hand`, { userName, hand });
+            console.log(`✌️ choose-hand ✌️`, { userName, hand });
             const room: Room = await roomUsecase.chooseHand(new RoomId(roomId), userName, hand);
             io.sockets.in(roomId).emit(`rps-hand-chosen`, {
                 userNameList: room.chosenUserNameList(),
             });
 
-            if (!roomUsecase.isReadyToJudge(room)) {
+            const isAllUserChooseHand: boolean = roomUsecase.isAllUserChooseHand(room);
+            if (!isAllUserChooseHand) {
                 return;
             }
+
             const battleResult: BattleResult = await roomUsecase.judgeBattle(room);
-            console.log(`battle-result`, { battleResult });
             io.sockets.in(roomId).emit(`round-settled`, { battleResult });
         });
 
