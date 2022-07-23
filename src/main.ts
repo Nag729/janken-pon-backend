@@ -2,7 +2,7 @@ import cors from "cors";
 import express from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
-import { RoomUsecase } from "./application/usecase/room-usecase";
+import { RoomError, RoomUsecase } from "./application/usecase/room-usecase";
 import { Hand } from "./domain/model/hand.value";
 import { RoomId } from "./domain/model/room-id.value";
 import { BattleResult, Room } from "./domain/model/room.entity";
@@ -47,8 +47,8 @@ app.post(`/create/room`, async (req, res) => {
 
 app.post(`/verify/room`, async (req, res) => {
     const { roomId } = req.body as { roomId: string };
-    const existRoom: boolean = !!(await roomUsecase.fetchRoom(new RoomId(roomId)));
-    res.send(existRoom);
+    const errorList: RoomError[] = await roomUsecase.verifyRoom(new RoomId(roomId));
+    res.send(errorList);
 });
 
 app.post(`/verify/user-name`, async (req, res) => {
@@ -67,8 +67,6 @@ io.on(`connection`, (socket) => {
      * Event: Joins to Socket.IO Room
      */
     socket.on(`room`, async ({ roomId, userName }: { roomId: string; userName: string }) => {
-        // TODO: すでにスタートしてる部屋には参加できないようにする
-
         socket.join(roomId);
         const userNameList: string[] = await roomUsecase.joinRoom(new RoomId(roomId), userName);
         io.sockets.in(roomId).emit(`user-name-list-updated`, { userNameList });

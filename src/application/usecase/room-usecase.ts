@@ -9,6 +9,8 @@ export interface RoomUsecaseDependencies {
     roomRepository?: RoomRepositoryInterface;
 }
 
+export type RoomError = `NOT_EXIST_ROOM` | `ALREADY_STARTED_ROOM` | `MAX_PLAYER`;
+
 export class RoomUsecase {
     private readonly _roomRepository: RoomRepositoryInterface;
 
@@ -27,6 +29,15 @@ export class RoomUsecase {
 
     public async fetchRoom(roomId: RoomId): Promise<Room | undefined> {
         return this._roomRepository.fetchRoom(roomId);
+    }
+
+    public async verifyRoom(roomId: RoomId): Promise<RoomError[]> {
+        const room: Room | undefined = await this._roomRepository.fetchRoom(roomId);
+
+        if (room === undefined) return [`NOT_EXIST_ROOM`];
+        if (room.isStarted()) return [`ALREADY_STARTED_ROOM`];
+        if (room.isMaxPlayer()) return [`MAX_PLAYER`];
+        return [];
     }
 
     public async verifyUserName(roomId: RoomId, userName: UserName): Promise<boolean> {

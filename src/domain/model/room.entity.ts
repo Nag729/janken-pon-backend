@@ -76,6 +76,10 @@ export class Room extends Entity<RoomId> {
         return this._userList.map((user) => user.userName());
     }
 
+    public isMaxPlayer(): boolean {
+        return this._userList.length === 8;
+    }
+
     public verifyUserName(userName: UserName): boolean {
         const userNameList = this.userNameList();
         return !userNameList.includes(userName);
