@@ -37,6 +37,6 @@
   "scripts": {
     "dev:watch": "ts-node-dev --respawn src/main.ts",
     "build": "rimraf dist && tsc",
-    "start": "node dist/main.js"
+    "start": "npm run build && node dist/main.js"
   }
 }
