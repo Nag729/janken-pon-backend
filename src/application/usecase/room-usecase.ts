@@ -20,8 +20,8 @@ export class RoomUsecase {
         return this._roomRepository.generateNewRoomId();
     }
 
-    public async createRoom(roomId: RoomId): Promise<void> {
-        const newRoom: Room = new Room({ roomId });
+    public async createRoom(roomId: RoomId, numberOfWinners: number): Promise<void> {
+        const newRoom: Room = new Room({ roomId, userNameList: [], numberOfWinners });
         await this._roomRepository.createRoom(newRoom);
     }
 
@@ -92,8 +92,8 @@ export class RoomUsecase {
     public async judgeBattle(room: Room): Promise<BattleResult> {
         const battleResult: BattleResult = room.judgeBattle();
 
-        // draw
-        if (!battleResult.winnerList) {
+        const isDraw: boolean = battleResult.roundWinnerList.length === 0;
+        if (isDraw) {
             room.startNextRound();
             await this._roomRepository.updateRpsBattleList(room);
         }

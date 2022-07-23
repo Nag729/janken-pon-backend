@@ -38,8 +38,10 @@ app.post(`/generate/room-id`, async (_, res) => {
 });
 
 app.post(`/create/room`, async (req, res) => {
+    const numberOfWinners = 1; // FIXME: フロントエンドから受け取る
+
     const { roomId } = req.body as { roomId: string };
-    await roomUsecase.createRoom(new RoomId(roomId));
+    await roomUsecase.createRoom(new RoomId(roomId), numberOfWinners);
     res.send(`🚀 ROOM CREATED: ${roomId} 🚀`);
 });
 
@@ -113,3 +115,6 @@ io.on(`connection`, (socket) => {
 httpServer.listen(PORT, () => {
     console.log(`🚀 SERVER LISTENING ON PORT:${PORT} 🚀`);
 });
+
+// ref: https://shadowsmith.com/how-to-deploy-an-express-api-to-vercel
+module.exports = app;
