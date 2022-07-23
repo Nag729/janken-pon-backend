@@ -115,6 +115,3 @@ io.on(`connection`, (socket) => {
 httpServer.listen(PORT, () => {
     console.log(`🚀 SERVER LISTENING ON PORT:${PORT} 🚀`);
 });
-
-// ref: https://shadowsmith.com/how-to-deploy-an-express-api-to-vercel
-module.exports = app;
