@@ -5,7 +5,9 @@
   "main": "main.ts",
   "scripts": {
     "dev:watch": "ts-node-dev --respawn src/main.ts",
+    "tsc": "./node_modules/typescript/bin/tsc",
     "build": "tsc",
+    "postinstall": "npm run build",
     "start": "node dist/main.js"
   },
   "repository": {
