@@ -1,0 +1,1 @@
+{"version":3,"file":"str-id.js","sourceRoot":"","sources":["../../../../src/domain/model/shared/str-id.ts"],"names":[],"mappings":";;;AAMA,MAAa,KAAK;IAGd,YAAY,KAAa;QACrB,IAAI,CAAC,KAAK,GAAG,KAAK,CAAC;IACvB,CAAC;IAEM,QAAQ,CAAC,KAAY;QACxB,OAAO,IAAI,CAAC,KAAK,KAAK,KAAK,CAAC,KAAK,CAAC;IACtC,CAAC;CACJ;AAVD,sBAUC"}
