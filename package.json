@@ -1,30 +1,10 @@
 {
   "name": "janken-pon-backend",
-  "version": "1.0.0",
   "description": "",
-  "main": "main.ts",
-  "scripts": {
-    "dev:watch": "ts-node-dev --respawn src/main.ts",
-    "build": "./node_modules/typescript/bin/tsc",
-    "start": "node dist/main.js"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Nag729/janken-pon-backend.git"
-  },
+  "version": "1.0.0",
   "author": "",
-  "license": "ISC",
   "bugs": {
     "url": "https://github.com/Nag729/janken-pon-backend/issues"
-  },
-  "homepage": "https://github.com/Nag729/janken-pon-backend#readme",
-  "devDependencies": {
-    "ts-node": "^10.9.1",
-    "ts-node-dev": "^2.0.0",
-    "@types/express": "^4.17.13",
-    "@types/node": "^17.0.4",
-    "@types/socket.io": "^3.0.2",
-    "@types/uuid": "^8.3.4"
   },
   "dependencies": {
     "aws-sdk": "^2.1176.0",
@@ -37,5 +17,25 @@
     "tsc": "^2.0.4",
     "typescript": "^4.7.4",
     "uuid": "^8.3.2"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.13",
+    "@types/node": "^17.0.4",
+    "@types/socket.io": "^3.0.2",
+    "@types/uuid": "^8.3.4",
+    "ts-node": "^10.9.1",
+    "ts-node-dev": "^2.0.0"
+  },
+  "homepage": "https://github.com/Nag729/janken-pon-backend#readme",
+  "license": "ISC",
+  "main": "main.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Nag729/janken-pon-backend.git"
+  },
+  "scripts": {
+    "build": "./node_modules/typescript/bin/tsc",
+    "dev:watch": "ts-node-dev --respawn src/main.ts",
+    "start": "node dist/main.js"
   }
 }
