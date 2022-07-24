@@ -1,7 +1,7 @@
 import { RoomRepositoryInterface } from "../../domain/interface/room-repository.interface";
 import { Hand } from "../../domain/model/hand.value";
 import { RoomId } from "../../domain/model/room-id.value";
-import { RoundResult, Room } from "../../domain/model/room.entity";
+import { Room } from "../../domain/model/room.entity";
 import { UserHand } from "../../domain/model/user-hand.value";
 import { User, UserName } from "../../domain/model/user.value";
 import { RoomRepository } from "../../infrastructure/repository/room-repository";
@@ -11,6 +11,13 @@ export interface RoomUsecaseDependencies {
 }
 
 export type RoomError = `NOT_EXIST_ROOM` | `ALREADY_STARTED_ROOM` | `MAX_PLAYER`;
+export type RoundResultForResponse = {
+    roundWinnerList: string[];
+    userHandList: {
+        userName: string;
+        hand: Hand;
+    }[];
+};
 
 export class RoomUsecase {
     private readonly _roomRepository: RoomRepositoryInterface;
@@ -78,13 +85,19 @@ export class RoomUsecase {
         return room.isAllUserChooseHand();
     }
 
-    public async judgeRound(room: Room): Promise<RoundResult> {
-        const roundResult: RoundResult = room.judgeRound();
+    public async judgeRound(room: Room): Promise<RoundResultForResponse> {
+        const { roundWinnerList, userHandList } = room.judgeRound();
 
         await this._roomRepository.updateRoomUserList(room);
         await this._roomRepository.updateRpsRoundList(room);
 
-        return roundResult;
+        return {
+            roundWinnerList: roundWinnerList.map((user) => user.userName()),
+            userHandList: userHandList.map((userHand) => ({
+                userName: userHand.userName(),
+                hand: userHand.hand(),
+            })),
+        };
     }
 
     public async addNextRound(room: Room): Promise<void> {

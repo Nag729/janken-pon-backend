@@ -2,10 +2,10 @@ import cors from "cors";
 import express from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
-import { RoomError, RoomUsecase } from "./application/usecase/room-usecase";
+import { RoomError, RoomUsecase, RoundResultForResponse } from "./application/usecase/room-usecase";
 import { Hand } from "./domain/model/hand.value";
 import { RoomId } from "./domain/model/room-id.value";
-import { RoundResult, Room } from "./domain/model/room.entity";
+import { Room } from "./domain/model/room.entity";
 require("dotenv").config();
 
 const app = express();
@@ -93,7 +93,7 @@ io.on(`connection`, (socket) => {
                 return;
             }
 
-            const roundResult: RoundResult = await roomUsecase.judgeRound(room);
+            const roundResult: RoundResultForResponse = await roomUsecase.judgeRound(room);
 
             if (!roomUsecase.isCompleted(room)) {
                 await roomUsecase.addNextRound(room);
