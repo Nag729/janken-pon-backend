@@ -1,9 +1,11 @@
 import dayjs from "dayjs";
 import { v4 as uuidv4 } from "uuid";
 import { RoomRepositoryInterface } from "../../domain/interface/room-repository.interface";
+import { Hand } from "../../domain/model/hand.value";
 import { RoomId } from "../../domain/model/room-id.value";
 import { Room } from "../../domain/model/room.entity";
-import { RpsBattle, UserHand } from "../../domain/model/rps-battle.value";
+import { RpsRound } from "../../domain/model/rps-round.value";
+import { UserHand } from "../../domain/model/user-hand.value";
 import { User } from "../../domain/model/user.value";
 import { DynamoDBDataStore, QueryResult } from "../datastore/dynamodb.datastore";
 
@@ -11,7 +13,7 @@ interface RoomRepositoryDependencies {
     dynamoDBDataStore?: DynamoDBDataStore;
 }
 
-type DBRpsBattle = {
+export type DBRpsRound = {
     round: number;
     userHandList: {
         userName: string;
@@ -24,7 +26,7 @@ export type DBRoom = {
     userNameList: string[];
     numberOfWinners: number;
     isStarted: boolean;
-    rpsBattleList: DBRpsBattle[];
+    rpsRoundList: DBRpsRound[];
     confirmedWinnerNameList: string[];
     confirmedLoserNameList: string[];
 };
@@ -115,16 +117,16 @@ export class RoomRepository implements RoomRepositoryInterface {
         );
     }
 
-    public async updateRpsBattleList(room: Room): Promise<void> {
-        const rpsBattleList = room.toRepository().rpsBattleList;
+    public async updateRpsRoundList(room: Room): Promise<void> {
+        const rpsRoundList = room.toRepository().rpsRoundList;
         await this.datastore.update(
             this.tableName,
             {
                 roomId: room.id.value,
             },
-            `set rpsBattleList = :rpsBattleList`,
+            `set rpsRoundList = :rpsRoundList`,
             {
-                ":rpsBattleList": rpsBattleList,
+                ":rpsRoundList": rpsRoundList,
             },
         );
     }
@@ -135,16 +137,18 @@ export class RoomRepository implements RoomRepositoryInterface {
             userNameList: db.userNameList.map((userName) => new User({ userName })),
             numberOfWinners: db.numberOfWinners,
             isStarted: db.isStarted,
-            rpsBattleList: db.rpsBattleList.map(this.createRpsBattleFromDB),
+            rpsRoundList: db.rpsRoundList.map(this.createRpsRoundFromDB),
             confirmedWinnerNameList: db.confirmedWinnerNameList.map((userName) => new User({ userName })),
             confirmedLoserNameList: db.confirmedLoserNameList.map((userName) => new User({ userName })),
         });
     }
 
-    private createRpsBattleFromDB(db: DBRpsBattle): RpsBattle {
-        return new RpsBattle({
+    private createRpsRoundFromDB(db: DBRpsRound): RpsRound {
+        return new RpsRound({
             round: db.round,
-            userHandList: db.userHandList as UserHand[],
+            userHandList: db.userHandList.map(
+                (userHand) => new UserHand({ userName: userHand.userName, hand: userHand.hand as Hand }),
+            ),
         });
     }
 }

@@ -1,15 +1,17 @@
 import { Hand } from "./hand.value";
-import { UserHand } from "./rps-battle.value";
-import { UserName } from "./user.value";
+import { UserHandCollection } from "./user-hand.collection";
+import { User, UserName } from "./user.value";
 
-export class RpsBattleJudgeService {
-    public static judgeRoundWinnerList(userHandList: UserHand[]): UserName[] {
-        const winnerHand: Hand | undefined = this.winnerHand(userHandList);
-        return userHandList.filter((userHand) => userHand.hand === winnerHand).map((userHand) => userHand.userName);
+export class RpsJudgeService {
+    public static judgeRoundWinnerList(userHandCollection: UserHandCollection): User[] {
+        const winnerHand: Hand | undefined = this.winnerHand(userHandCollection);
+        return userHandCollection
+            .filterByHand(winnerHand)
+            .map((userHand) => new User({ userName: userHand.userName() }));
     }
 
-    private static winnerHand(userHandList: UserHand[]): Hand | undefined {
-        const uniqueHandList: Hand[] = [...new Set(userHandList.map((userHand) => userHand.hand))];
+    private static winnerHand(userHandCollection: UserHandCollection): Hand | undefined {
+        const uniqueHandList: Hand[] = userHandCollection.uniqueHandList();
 
         const handCount: number = uniqueHandList.length;
         if (handCount === 1 || handCount === 3) {

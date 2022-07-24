@@ -19,5 +19,5 @@ export interface RoomRepositoryInterface {
      */
     updateRoomUserNameList(room: Room): Promise<void>;
     updateRoomStarted(room: Room): Promise<void>;
-    updateRpsBattleList(room: Room): Promise<void>;
+    updateRpsRoundList(room: Room): Promise<void>;
 }

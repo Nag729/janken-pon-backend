@@ -2,6 +2,7 @@ import { RoomRepositoryInterface } from "../../domain/interface/room-repository.
 import { Hand } from "../../domain/model/hand.value";
 import { RoomId } from "../../domain/model/room-id.value";
 import { RoundResult, Room } from "../../domain/model/room.entity";
+import { UserHand } from "../../domain/model/user-hand.value";
 import { User, UserName } from "../../domain/model/user.value";
 import { RoomRepository } from "../../infrastructure/repository/room-repository";
 
@@ -63,13 +64,13 @@ export class RoomUsecase {
 
         room.startRps();
         await this._roomRepository.updateRoomStarted(room);
-        await this._roomRepository.updateRpsBattleList(room);
+        await this._roomRepository.updateRpsRoundList(room);
     }
 
     public async chooseHand(roomId: RoomId, userName: UserName, hand: Hand): Promise<Room> {
         const room: Room = await this._roomRepository.fetchShouldExistRoom(roomId);
-        room.chooseHand(userName, hand);
-        await this._roomRepository.updateRpsBattleList(room);
+        room.chooseHand(new UserHand({ userName, hand }));
+        await this._roomRepository.updateRpsRoundList(room);
         return room;
     }
 
@@ -77,12 +78,12 @@ export class RoomUsecase {
         return room.isAllUserChooseHand();
     }
 
-    public async judgeBattle(room: Room): Promise<RoundResult> {
-        const roundResult: RoundResult = room.judgeBattle();
-        const isDraw: boolean = roundResult.roundWinnerNameList.length === 0;
+    public async judgeRound(room: Room): Promise<RoundResult> {
+        const roundResult: RoundResult = room.judgeRound();
+        const isDraw: boolean = roundResult.roundWinnerList.length === 0;
         if (isDraw) {
             room.startNextRound();
-            await this._roomRepository.updateRpsBattleList(room);
+            await this._roomRepository.updateRpsRoundList(room);
         }
         return roundResult;
     }

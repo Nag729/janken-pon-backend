@@ -1,8 +1,9 @@
 import { DBRoom } from "../../infrastructure/repository/room-repository";
-import { Hand } from "./hand.value";
 import { RoomId } from "./room-id.value";
-import { RpsBattle, UserHand } from "./rps-battle.value";
+import { RpsRoundCollection } from "./rps-round.collection";
+import { RpsRound } from "./rps-round.value";
 import { Entity } from "./shared/entity";
+import { UserHand } from "./user-hand.value";
 import { UserCollection } from "./user.collection";
 import { User, UserName } from "./user.value";
 
@@ -11,16 +12,16 @@ export type RoomProps = {
     userNameList: User[];
     numberOfWinners: number;
     isStarted?: boolean;
-    rpsBattleList?: RpsBattle[];
+    rpsRoundList?: RpsRound[];
     confirmedWinnerNameList?: User[];
     confirmedLoserNameList?: User[];
 };
 
 export type RoundResult = {
-    roundWinnerNameList: UserName[];
+    roundWinnerList: User[];
     userHandList: UserHand[];
-    // confirmedWinnerNameList: UserName[];
-    // confirmedLoserNameList: UserName[];
+    // confirmedWinnerList: User[];
+    // confirmedLoserList: User[];
 };
 
 export class Room extends Entity<RoomId> {
@@ -34,7 +35,7 @@ export class Room extends Entity<RoomId> {
     private _isStarted: boolean;
 
     // battle
-    private _rpsBattleList: RpsBattle[];
+    private _rpsRoundCollection: RpsRoundCollection;
     private _confirmedWinnerCollection: UserCollection;
     private _confirmedLoserCollection: UserCollection;
 
@@ -46,7 +47,9 @@ export class Room extends Entity<RoomId> {
         });
         this._numberOfWinners = props.numberOfWinners;
         this._isStarted = props.isStarted ?? false;
-        this._rpsBattleList = props.rpsBattleList ?? [];
+        this._rpsRoundCollection = new RpsRoundCollection({
+            rpsRoundList: props.rpsRoundList ?? [],
+        });
         this._confirmedWinnerCollection = new UserCollection({
             userList: props.confirmedWinnerNameList ?? [],
         });
@@ -68,15 +71,20 @@ export class Room extends Entity<RoomId> {
     public addUser(user: User): void {
         this._userCollection.addUser(user);
     }
+
     public removeUser(user: User): void {
         this._userCollection.removeUser(user);
     }
+
     public userNameList(): UserName[] {
         return this._userCollection.userNameList();
     }
+
     public isMaxPlayer(): boolean {
-        return this._userCollection.count() === 8;
+        const MAX_PLAYER_COUNT = 8;
+        return this._userCollection.count() === MAX_PLAYER_COUNT;
     }
+
     public verifyUserName(userName: UserName): boolean {
         return this._userCollection.verifyUserName(userName);
     }
@@ -94,59 +102,41 @@ export class Room extends Entity<RoomId> {
     }
 
     /**
-     * RPS Battle
+     * RPS Round
      */
     public startNextRound(): void {
-        const nextRound: number = this._rpsBattleList.length + 1;
-        const nextBattle = new RpsBattle({
-            round: nextRound,
-            userHandList: [],
-        });
-        this._rpsBattleList.push(nextBattle);
+        this._rpsRoundCollection.startNextRound();
     }
 
-    private currentBattle(): RpsBattle | undefined {
-        return this._rpsBattleList[this._rpsBattleList.length - 1];
-    }
-
-    public chooseHand(userName: UserName, hand: Hand): void {
-        const battle = this.currentBattle();
-        if (battle === undefined) {
-            return;
-        }
-        battle.addUserHand(userName, hand);
+    public chooseHand(userHand: UserHand): void {
+        const round: RpsRound = this._rpsRoundCollection.currentRound();
+        round.addUserHand(userHand);
     }
 
     public isAllUserChooseHand(): boolean {
-        const battle = this.currentBattle();
-        if (battle === undefined) {
-            return false;
-        }
-
-        const isAllUserChooseHand = battle.userHandList().length === this._userCollection.count();
-        return isAllUserChooseHand;
+        const round: RpsRound = this._rpsRoundCollection.currentRound();
+        const chosenCount: number = round.chosenCount();
+        const userCount = this._userCollection.count();
+        return chosenCount === userCount;
     }
 
-    public judgeBattle(): RoundResult {
-        const battle = this.currentBattle();
-        if (battle === undefined) {
-            throw new Error("battle is not found");
-        }
+    public judgeRound(): RoundResult {
+        const round: RpsRound = this._rpsRoundCollection.currentRound();
 
-        // TODO: winner, loser を記録する
-        const roundWinnerNameList: UserName[] = battle.judgeRoundWinnerList();
+        // TODO: winner, loser を算出する
+        const roundWinnerList = round.judgeRoundWinnerList();
+        const userHandList = round.userHandList();
+
         return {
-            roundWinnerNameList,
-            userHandList: battle.userHandList(),
+            roundWinnerList,
+            userHandList,
         };
     }
 
     public chosenUserNameList(): UserName[] {
-        const battle = this.currentBattle();
-        if (battle === undefined) {
-            return [];
-        }
-        return battle.userHandList().map((userHand) => userHand.userName);
+        const round: RpsRound = this._rpsRoundCollection.currentRound();
+        const chosenUserList: User[] = round.chosenUserList();
+        return chosenUserList.map((user) => user.userName());
     }
 
     public isCompleted(): boolean {
@@ -163,7 +153,7 @@ export class Room extends Entity<RoomId> {
             userNameList: this._userCollection.userNameList(),
             numberOfWinners: this._numberOfWinners,
             isStarted: this._isStarted,
-            rpsBattleList: this._rpsBattleList.map((battle) => battle.toObject()),
+            rpsRoundList: this._rpsRoundCollection.toRepository(),
             confirmedWinnerNameList: this._confirmedWinnerCollection.userNameList(),
             confirmedLoserNameList: this._confirmedLoserCollection.userNameList(),
         };
