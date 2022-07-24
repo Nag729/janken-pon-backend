@@ -3,7 +3,7 @@ import { RpsJudgeService } from "./rps-judge.service";
 import { ValueObject } from "./shared/value-object";
 import { UserHandCollection } from "./user-hand.collection";
 import { UserHand } from "./user-hand.value";
-import { User, UserName } from "./user.value";
+import { User } from "./user.value";
 const equal = require("deep-equal");
 
 type RpsRoundProps = {

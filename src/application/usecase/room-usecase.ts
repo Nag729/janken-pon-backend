@@ -52,14 +52,14 @@ export class RoomUsecase {
     public async joinRoom(roomId: RoomId, userName: UserName): Promise<UserName[]> {
         const room: Room = await this._roomRepository.fetchShouldExistRoom(roomId);
         room.addUser(new User({ userName }));
-        await this._roomRepository.updateRoomUserList(room);
+        await this._roomRepository.updateRoom(room);
         return room.userNameList();
     }
 
     public async leaveRoom(roomId: RoomId, userName: UserName): Promise<UserName[]> {
         const room: Room = await this._roomRepository.fetchShouldExistRoom(roomId);
         room.removeUser(new User({ userName }));
-        await this._roomRepository.updateRoomUserList(room);
+        await this._roomRepository.updateRoom(room);
         return room.userNameList();
     }
 
@@ -70,14 +70,13 @@ export class RoomUsecase {
         }
 
         room.startRps();
-        await this._roomRepository.updateRoomStarted(room);
-        await this._roomRepository.updateRpsRoundList(room);
+        await this._roomRepository.updateRoom(room);
     }
 
     public async chooseHand(roomId: RoomId, userName: UserName, hand: Hand): Promise<Room> {
         const room: Room = await this._roomRepository.fetchShouldExistRoom(roomId);
         room.chooseHand(new UserHand({ userName, hand }));
-        await this._roomRepository.updateRpsRoundList(room);
+        await this._roomRepository.updateRoom(room);
         return room;
     }
 
@@ -87,9 +86,7 @@ export class RoomUsecase {
 
     public async judgeRound(room: Room): Promise<RoundResultForResponse> {
         const { roundWinnerList, userHandList } = room.judgeRound();
-
-        await this._roomRepository.updateRoomUserList(room);
-        await this._roomRepository.updateRpsRoundList(room);
+        await this._roomRepository.updateRoom(room);
 
         return {
             roundWinnerList: roundWinnerList.map((user) => user.userName()),
@@ -102,7 +99,7 @@ export class RoomUsecase {
 
     public async addNextRound(room: Room): Promise<void> {
         room.startNextRound();
-        await this._roomRepository.updateRpsRoundList(room);
+        await this._roomRepository.updateRoom(room);
     }
 
     public isCompleted(room: Room): boolean {

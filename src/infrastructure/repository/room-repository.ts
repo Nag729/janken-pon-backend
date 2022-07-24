@@ -8,6 +8,7 @@ import { RpsRound } from "../../domain/model/rps-round.value";
 import { UserHand } from "../../domain/model/user-hand.value";
 import { User, WinOrLose } from "../../domain/model/user.value";
 import { DynamoDBDataStore, QueryResult } from "../datastore/dynamodb.datastore";
+const equal = require("deep-equal");
 
 interface RoomRepositoryDependencies {
     dynamoDBDataStore?: DynamoDBDataStore;
@@ -47,7 +48,7 @@ export class RoomRepository implements RoomRepositoryInterface {
     /**
      * FETCH
      */
-    public async fetchRoom(roomId: RoomId): Promise<Room | undefined> {
+    private async fetchDBRoom(roomId: RoomId): Promise<DBRoom | undefined> {
         const queryResult: QueryResult<DBRoom> = await this.datastore.queryByPrimaryKey({
             tableName: this.tableName,
             partitioningKeyParams: {
@@ -55,8 +56,11 @@ export class RoomRepository implements RoomRepositoryInterface {
                 attributeValues: { sign: "=", values: [roomId.value] },
             },
         });
+        return queryResult.Items.pop();
+    }
 
-        const room: DBRoom | undefined = queryResult.Items.pop();
+    public async fetchRoom(roomId: RoomId): Promise<Room | undefined> {
+        const room: DBRoom | undefined = await this.fetchDBRoom(roomId);
         return !!room ? this.createRoomFromDB(room) : undefined;
     }
 
@@ -92,46 +96,47 @@ export class RoomRepository implements RoomRepositoryInterface {
     /**
      * UPDATE
      */
-    public async updateRoomUserList(room: Room): Promise<void> {
-        const userList = room.toRepository().userList;
-        await this.datastore.update(
-            this.tableName,
-            {
-                roomId: room.id.value,
-            },
-            `set userList = :userList`,
-            {
-                ":userList": userList,
-            },
-        );
+    public async updateRoom(room: Room): Promise<void> {
+        const oldDBRoom: DBRoom | undefined = await this.fetchDBRoom(room.id);
+        if (oldDBRoom === undefined) {
+            return;
+        }
+
+        const newDBRoom: DBRoom = room.toRepository();
+
+        // check diff
+        const updatedUserList: boolean = !equal(oldDBRoom.userList, newDBRoom.userList);
+        if (updatedUserList) {
+            await this.updateRoomUserList(room.id.value, newDBRoom.userList);
+        }
+
+        const updatedIsStarted: boolean = oldDBRoom.isStarted !== newDBRoom.isStarted;
+        if (updatedIsStarted) {
+            await this.updateRoomStarted(room.id.value, newDBRoom.isStarted);
+        }
+
+        const updatedRpsRoundList: boolean = !equal(oldDBRoom.rpsRoundList, newDBRoom.rpsRoundList);
+        if (updatedRpsRoundList) {
+            await this.updateRpsRoundList(room.id.value, newDBRoom.rpsRoundList);
+        }
     }
 
-    public async updateRoomStarted(room: Room): Promise<void> {
-        const isStarted = room.toRepository().isStarted;
-        await this.datastore.update(
-            this.tableName,
-            {
-                roomId: room.id.value,
-            },
-            `set isStarted = :isStarted`,
-            {
-                ":isStarted": isStarted,
-            },
-        );
+    private async updateRoomUserList(roomId: string, userList: DBUser[]): Promise<void> {
+        await this.datastore.update(this.tableName, { roomId }, `set userList = :userList`, {
+            ":userList": userList,
+        });
     }
 
-    public async updateRpsRoundList(room: Room): Promise<void> {
-        const rpsRoundList = room.toRepository().rpsRoundList;
-        await this.datastore.update(
-            this.tableName,
-            {
-                roomId: room.id.value,
-            },
-            `set rpsRoundList = :rpsRoundList`,
-            {
-                ":rpsRoundList": rpsRoundList,
-            },
-        );
+    private async updateRoomStarted(roomId: string, isStarted: boolean): Promise<void> {
+        await this.datastore.update(this.tableName, { roomId }, `set isStarted = :isStarted`, {
+            ":isStarted": isStarted,
+        });
+    }
+
+    private async updateRpsRoundList(roomId: string, rpsRoundList: DBRpsRound[]): Promise<void> {
+        await this.datastore.update(this.tableName, { roomId }, `set rpsRoundList = :rpsRoundList`, {
+            ":rpsRoundList": rpsRoundList,
+        });
     }
 
     private createRoomFromDB(db: DBRoom): Room {
