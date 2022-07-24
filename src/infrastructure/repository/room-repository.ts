@@ -41,7 +41,7 @@ export class RoomRepository implements RoomRepositoryInterface {
     /**
      * FETCH
      */
-    public async fetchRoom(roomId: RoomId): Promise<Room> {
+    public async fetchRoom(roomId: RoomId): Promise<Room | undefined> {
         const queryResult: QueryResult<DBRoom> = await this.datastore.queryByPrimaryKey({
             tableName: this.tableName,
             partitioningKeyParams: {
@@ -51,10 +51,15 @@ export class RoomRepository implements RoomRepositoryInterface {
         });
 
         const room: DBRoom | undefined = queryResult.Items.pop();
+        return !!room ? this.createRoomFromDB(room) : undefined;
+    }
+
+    public async fetchShouldExistRoom(roomId: RoomId): Promise<Room> {
+        const room: Room | undefined = await this.fetchRoom(roomId);
         if (room === undefined) {
             throw new Error(`Room not found: ${roomId.value}`);
         }
-        return this.createRoomFromDB(room);
+        return room;
     }
 
     /**
@@ -66,9 +71,7 @@ export class RoomRepository implements RoomRepositoryInterface {
         for (let i = 0; i < 3; i++) {
             roomId = new RoomId(uuidv4());
             const existRoom: boolean = !!(await this.fetchRoom(roomId));
-            if (!existRoom) {
-                break;
-            }
+            if (!existRoom) break;
         }
         return roomId!;
     }

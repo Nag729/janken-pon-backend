@@ -27,10 +27,6 @@ export class RoomUsecase {
         await this._roomRepository.createRoom(newRoom);
     }
 
-    public async fetchRoom(roomId: RoomId): Promise<Room | undefined> {
-        return this._roomRepository.fetchRoom(roomId);
-    }
-
     public async verifyRoom(roomId: RoomId): Promise<RoomError[]> {
         const room: Room | undefined = await this._roomRepository.fetchRoom(roomId);
 
@@ -41,26 +37,26 @@ export class RoomUsecase {
     }
 
     public async verifyUserName(roomId: RoomId, userName: UserName): Promise<boolean> {
-        const room: Room = await this._roomRepository.fetchRoom(roomId);
+        const room: Room = await this._roomRepository.fetchShouldExistRoom(roomId);
         return room.verifyUserName(userName);
     }
 
     public async joinRoom(roomId: RoomId, userName: UserName): Promise<UserName[]> {
-        const room: Room = await this._roomRepository.fetchRoom(roomId);
+        const room: Room = await this._roomRepository.fetchShouldExistRoom(roomId);
         room.addUser(new User({ userName }));
         await this._roomRepository.updateRoomUserNameList(room);
         return room.userNameList();
     }
 
     public async leaveRoom(roomId: RoomId, userName: UserName): Promise<UserName[]> {
-        const room: Room = await this._roomRepository.fetchRoom(roomId);
+        const room: Room = await this._roomRepository.fetchShouldExistRoom(roomId);
         room.removeUser(new User({ userName }));
         await this._roomRepository.updateRoomUserNameList(room);
         return room.userNameList();
     }
 
     public async startRps(roomId: RoomId): Promise<void> {
-        const room: Room = await this._roomRepository.fetchRoom(roomId);
+        const room: Room = await this._roomRepository.fetchShouldExistRoom(roomId);
         if (room.isStarted()) {
             throw new Error(`Already started roomId: ${roomId.value}`);
         }
@@ -71,7 +67,7 @@ export class RoomUsecase {
     }
 
     public async chooseHand(roomId: RoomId, userName: UserName, hand: Hand): Promise<Room> {
-        const room: Room = await this._roomRepository.fetchRoom(roomId);
+        const room: Room = await this._roomRepository.fetchShouldExistRoom(roomId);
         room.chooseHand(userName, hand);
         await this._roomRepository.updateRpsBattleList(room);
         return room;

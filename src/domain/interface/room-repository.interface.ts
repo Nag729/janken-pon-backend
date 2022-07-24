@@ -5,7 +5,8 @@ export interface RoomRepositoryInterface {
     /**
      * FETCH
      */
-    fetchRoom(roomId: RoomId): Promise<Room>;
+    fetchRoom(roomId: RoomId): Promise<Room | undefined>;
+    fetchShouldExistRoom(roomId: RoomId): Promise<Room>;
 
     /**
      * CREATE
