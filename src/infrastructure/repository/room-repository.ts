@@ -4,6 +4,7 @@ import { RoomRepositoryInterface } from "../../domain/interface/room-repository.
 import { RoomId } from "../../domain/model/room-id.value";
 import { Room } from "../../domain/model/room.entity";
 import { RpsBattle, UserHand } from "../../domain/model/rps-battle.value";
+import { User } from "../../domain/model/user.value";
 import { DynamoDBDataStore, QueryResult } from "../datastore/dynamodb.datastore";
 
 interface RoomRepositoryDependencies {
@@ -131,12 +132,12 @@ export class RoomRepository implements RoomRepositoryInterface {
     private createRoomFromDB(db: DBRoom): Room {
         return new Room({
             roomId: new RoomId(db.roomId),
-            userNameList: db.userNameList,
+            userNameList: db.userNameList.map((userName) => new User({ userName })),
             numberOfWinners: db.numberOfWinners,
             isStarted: db.isStarted,
             rpsBattleList: db.rpsBattleList.map(this.createRpsBattleFromDB),
-            confirmedWinnerNameList: db.confirmedWinnerNameList,
-            confirmedLoserNameList: db.confirmedLoserNameList,
+            confirmedWinnerNameList: db.confirmedWinnerNameList.map((userName) => new User({ userName })),
+            confirmedLoserNameList: db.confirmedLoserNameList.map((userName) => new User({ userName })),
         });
     }
 

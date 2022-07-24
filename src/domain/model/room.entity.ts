@@ -8,12 +8,12 @@ import { User, UserName } from "./user.value";
 
 export type RoomProps = {
     roomId: RoomId;
-    userNameList: UserName[];
+    userNameList: User[];
     numberOfWinners: number;
     isStarted?: boolean;
     rpsBattleList?: RpsBattle[];
-    confirmedWinnerNameList?: UserName[];
-    confirmedLoserNameList?: UserName[];
+    confirmedWinnerNameList?: User[];
+    confirmedLoserNameList?: User[];
 };
 
 export type RoundResult = {
@@ -39,24 +39,19 @@ export class Room extends Entity<RoomId> {
     private _confirmedLoserCollection: UserCollection;
 
     constructor(props: RoomProps) {
-        const userNameListToUserList = (userNameList?: UserName[]): User[] => {
-            if (userNameList === undefined) return [];
-            return userNameList.map((userName) => new User({ userName }));
-        };
-
         super(props.roomId);
 
         this._userCollection = new UserCollection({
-            userList: userNameListToUserList(props.userNameList),
+            userList: props.userNameList,
         });
         this._numberOfWinners = props.numberOfWinners;
         this._isStarted = props.isStarted ?? false;
         this._rpsBattleList = props.rpsBattleList ?? [];
         this._confirmedWinnerCollection = new UserCollection({
-            userList: userNameListToUserList(props.confirmedWinnerNameList),
+            userList: props.confirmedWinnerNameList ?? [],
         });
         this._confirmedLoserCollection = new UserCollection({
-            userList: userNameListToUserList(props.confirmedLoserNameList),
+            userList: props.confirmedLoserNameList ?? [],
         });
     }
 
