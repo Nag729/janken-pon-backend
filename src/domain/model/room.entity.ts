@@ -1,5 +1,6 @@
 import { DBRoom } from "../../infrastructure/repository/room-repository";
 import { RoomId } from "./room-id.value";
+import { RpsJudgeService } from "./rps-judge.service";
 import { RpsRoundCollection } from "./rps-round.collection";
 import { RpsRound } from "./rps-round.value";
 import { Entity } from "./shared/entity";
@@ -9,24 +10,20 @@ import { User, UserName } from "./user.value";
 
 export type RoomProps = {
     roomId: RoomId;
-    userNameList: User[];
+    userList: User[];
     numberOfWinners: number;
     isStarted?: boolean;
     rpsRoundList?: RpsRound[];
-    confirmedWinnerNameList?: User[];
-    confirmedLoserNameList?: User[];
 };
 
 export type RoundResult = {
     roundWinnerList: User[];
     userHandList: UserHand[];
-    // confirmedWinnerList: User[];
-    // confirmedLoserList: User[];
 };
 
 export class Room extends Entity<RoomId> {
     // room user
-    private readonly _userCollection: UserCollection;
+    private _userCollection: UserCollection;
 
     // rule
     private readonly _numberOfWinners: number;
@@ -36,25 +33,17 @@ export class Room extends Entity<RoomId> {
 
     // battle
     private _rpsRoundCollection: RpsRoundCollection;
-    private _confirmedWinnerCollection: UserCollection;
-    private _confirmedLoserCollection: UserCollection;
 
     constructor(props: RoomProps) {
         super(props.roomId);
 
         this._userCollection = new UserCollection({
-            userList: props.userNameList,
+            userList: props.userList,
         });
         this._numberOfWinners = props.numberOfWinners;
         this._isStarted = props.isStarted ?? false;
         this._rpsRoundCollection = new RpsRoundCollection({
             rpsRoundList: props.rpsRoundList ?? [],
-        });
-        this._confirmedWinnerCollection = new UserCollection({
-            userList: props.confirmedWinnerNameList ?? [],
-        });
-        this._confirmedLoserCollection = new UserCollection({
-            userList: props.confirmedLoserNameList ?? [],
         });
     }
 
@@ -116,16 +105,26 @@ export class Room extends Entity<RoomId> {
     public isAllUserChooseHand(): boolean {
         const round: RpsRound = this._rpsRoundCollection.currentRound();
         const chosenCount: number = round.chosenCount();
-        const userCount = this._userCollection.count();
-        return chosenCount === userCount;
+
+        const fightingUserCount = this._userCollection.fightingCount();
+        return chosenCount === fightingUserCount;
     }
 
     public judgeRound(): RoundResult {
         const round: RpsRound = this._rpsRoundCollection.currentRound();
 
-        // TODO: winner, loser を算出する
-        const roundWinnerList = round.judgeRoundWinnerList();
-        const userHandList = round.userHandList();
+        // round result
+        const roundWinnerList: User[] = round.judgeRoundWinnerList();
+        const userHandList: UserHand[] = round.userHandList();
+
+        // update winOrLose
+        RpsJudgeService.updateWinOrLose({
+            userCollection: this._userCollection,
+            numberOfWinners: this._numberOfWinners,
+            roundWinnerCollection: new UserCollection({
+                userList: roundWinnerList,
+            }),
+        });
 
         return {
             roundWinnerList,
@@ -140,22 +139,20 @@ export class Room extends Entity<RoomId> {
     }
 
     public isCompleted(): boolean {
-        return this._confirmedWinnerCollection.count() === this._numberOfWinners;
+        return this._userCollection.winnerCount() === this._numberOfWinners;
     }
 
     public winnerUserNameList(): UserName[] {
-        return this._confirmedWinnerCollection.userNameList();
+        return this._userCollection.winnerUserNameList();
     }
 
     public toRepository(): DBRoom {
         return {
             roomId: this.id.value,
-            userNameList: this._userCollection.userNameList(),
+            userList: this._userCollection.toRepository(),
             numberOfWinners: this._numberOfWinners,
             isStarted: this._isStarted,
             rpsRoundList: this._rpsRoundCollection.toRepository(),
-            confirmedWinnerNameList: this._confirmedWinnerCollection.userNameList(),
-            confirmedLoserNameList: this._confirmedLoserCollection.userNameList(),
         };
     }
 }

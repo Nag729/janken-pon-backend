@@ -24,7 +24,7 @@ export class RoomUsecase {
     }
 
     public async createRoom(roomId: RoomId, numberOfWinners: number): Promise<void> {
-        const newRoom: Room = new Room({ roomId, userNameList: [], numberOfWinners });
+        const newRoom: Room = new Room({ roomId, userList: [], numberOfWinners });
         await this._roomRepository.createRoom(newRoom);
     }
 
@@ -45,14 +45,14 @@ export class RoomUsecase {
     public async joinRoom(roomId: RoomId, userName: UserName): Promise<UserName[]> {
         const room: Room = await this._roomRepository.fetchShouldExistRoom(roomId);
         room.addUser(new User({ userName }));
-        await this._roomRepository.updateRoomUserNameList(room);
+        await this._roomRepository.updateRoomUserList(room);
         return room.userNameList();
     }
 
     public async leaveRoom(roomId: RoomId, userName: UserName): Promise<UserName[]> {
         const room: Room = await this._roomRepository.fetchShouldExistRoom(roomId);
         room.removeUser(new User({ userName }));
-        await this._roomRepository.updateRoomUserNameList(room);
+        await this._roomRepository.updateRoomUserList(room);
         return room.userNameList();
     }
 
@@ -80,12 +80,16 @@ export class RoomUsecase {
 
     public async judgeRound(room: Room): Promise<RoundResult> {
         const roundResult: RoundResult = room.judgeRound();
-        const isDraw: boolean = roundResult.roundWinnerList.length === 0;
-        if (isDraw) {
-            room.startNextRound();
-            await this._roomRepository.updateRpsRoundList(room);
-        }
+
+        await this._roomRepository.updateRoomUserList(room);
+        await this._roomRepository.updateRpsRoundList(room);
+
         return roundResult;
+    }
+
+    public async addNextRound(room: Room): Promise<void> {
+        room.startNextRound();
+        await this._roomRepository.updateRpsRoundList(room);
     }
 
     public isCompleted(room: Room): boolean {

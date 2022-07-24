@@ -1,3 +1,4 @@
+import { DBUser } from "../../infrastructure/repository/room-repository";
 import { User, UserName } from "./user.value";
 
 type UserCollectionProps = {
@@ -19,6 +20,18 @@ export class UserCollection {
         return this._userList.length;
     }
 
+    public fightingCount(): number {
+        return this._userList.filter((user) => user.isFighting()).length;
+    }
+
+    public winnerCount(): number {
+        return this._userList.filter((user) => user.isWin()).length;
+    }
+
+    public winnerUserNameList(): UserName[] {
+        return this._userList.filter((user) => user.isWin()).map((user) => user.userName());
+    }
+
     public addUser(user: User): void {
         const userNameList = this.userNameList();
         if (userNameList.includes(user.userName())) {
@@ -32,6 +45,22 @@ export class UserCollection {
         this._userList.splice(removeIndex, 1);
     }
 
+    public updateToWin({ roundWinnerNameList }: { roundWinnerNameList: UserName[] }): void {
+        const fightingUserList: User[] = this._userList.filter((user) => user.isFighting());
+        fightingUserList.forEach((user) => {
+            const isWinner = roundWinnerNameList.includes(user.userName());
+            if (isWinner) user.setToWin();
+        });
+    }
+
+    public updateToLose({ roundWinnerNameList }: { roundWinnerNameList: UserName[] }): void {
+        const fightingUserList: User[] = this._userList.filter((user) => user.isFighting());
+        fightingUserList.forEach((user) => {
+            const isWinner = roundWinnerNameList.includes(user.userName());
+            if (!isWinner) user.setToLose();
+        });
+    }
+
     public isMaxPlayer(): boolean {
         return this._userList.length === 8;
     }
@@ -39,5 +68,9 @@ export class UserCollection {
     public verifyUserName(userName: UserName): boolean {
         const userNameList = this.userNameList();
         return !userNameList.includes(userName);
+    }
+
+    public toRepository(): DBUser[] {
+        return this._userList.map((user) => user.toRepository());
     }
 }

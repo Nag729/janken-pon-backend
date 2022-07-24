@@ -17,7 +17,7 @@ export interface RoomRepositoryInterface {
     /**
      * UPDATE
      */
-    updateRoomUserNameList(room: Room): Promise<void>;
+    updateRoomUserList(room: Room): Promise<void>;
     updateRoomStarted(room: Room): Promise<void>;
     updateRpsRoundList(room: Room): Promise<void>;
 }

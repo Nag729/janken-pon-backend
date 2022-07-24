@@ -6,12 +6,17 @@ import { RoomId } from "../../domain/model/room-id.value";
 import { Room } from "../../domain/model/room.entity";
 import { RpsRound } from "../../domain/model/rps-round.value";
 import { UserHand } from "../../domain/model/user-hand.value";
-import { User } from "../../domain/model/user.value";
+import { User, WinOrLose } from "../../domain/model/user.value";
 import { DynamoDBDataStore, QueryResult } from "../datastore/dynamodb.datastore";
 
 interface RoomRepositoryDependencies {
     dynamoDBDataStore?: DynamoDBDataStore;
 }
+
+export type DBUser = {
+    userName: string;
+    winOrLose?: string;
+};
 
 export type DBRpsRound = {
     round: number;
@@ -23,12 +28,10 @@ export type DBRpsRound = {
 
 export type DBRoom = {
     roomId: string;
-    userNameList: string[];
+    userList: DBUser[];
     numberOfWinners: number;
     isStarted: boolean;
     rpsRoundList: DBRpsRound[];
-    confirmedWinnerNameList: string[];
-    confirmedLoserNameList: string[];
 };
 
 export class RoomRepository implements RoomRepositoryInterface {
@@ -89,16 +92,16 @@ export class RoomRepository implements RoomRepositoryInterface {
     /**
      * UPDATE
      */
-    public async updateRoomUserNameList(room: Room): Promise<void> {
-        const userNameList = room.toRepository().userNameList;
+    public async updateRoomUserList(room: Room): Promise<void> {
+        const userList = room.toRepository().userList;
         await this.datastore.update(
             this.tableName,
             {
                 roomId: room.id.value,
             },
-            `set userNameList = :userNameList`,
+            `set userList = :userList`,
             {
-                ":userNameList": userNameList,
+                ":userList": userList,
             },
         );
     }
@@ -134,12 +137,12 @@ export class RoomRepository implements RoomRepositoryInterface {
     private createRoomFromDB(db: DBRoom): Room {
         return new Room({
             roomId: new RoomId(db.roomId),
-            userNameList: db.userNameList.map((userName) => new User({ userName })),
+            userList: db.userList.map(
+                (user) => new User({ userName: user.userName, winOrLose: user.winOrLose as WinOrLose | undefined }),
+            ),
             numberOfWinners: db.numberOfWinners,
             isStarted: db.isStarted,
             rpsRoundList: db.rpsRoundList.map(this.createRpsRoundFromDB),
-            confirmedWinnerNameList: db.confirmedWinnerNameList.map((userName) => new User({ userName })),
-            confirmedLoserNameList: db.confirmedLoserNameList.map((userName) => new User({ userName })),
         });
     }
 

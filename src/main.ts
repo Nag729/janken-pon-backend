@@ -94,9 +94,10 @@ io.on(`connection`, (socket) => {
             }
 
             const roundResult: RoundResult = await roomUsecase.judgeRound(room);
-            io.sockets.in(roomId).emit(`round-settled`, { roundResult });
 
             if (!roomUsecase.isCompleted(room)) {
+                await roomUsecase.addNextRound(room);
+                io.sockets.in(roomId).emit(`round-settled`, { roundResult });
                 return;
             }
 

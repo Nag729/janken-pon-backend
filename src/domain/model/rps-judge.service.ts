@@ -1,8 +1,12 @@
 import { Hand } from "./hand.value";
 import { UserHandCollection } from "./user-hand.collection";
+import { UserCollection } from "./user.collection";
 import { User, UserName } from "./user.value";
 
 export class RpsJudgeService {
+    /**
+     * Judge for Round Win or Lose
+     */
     public static judgeRoundWinnerList(userHandCollection: UserHandCollection): User[] {
         const winnerHand: Hand | undefined = this.winnerHand(userHandCollection);
         return userHandCollection
@@ -30,6 +34,31 @@ export class RpsJudgeService {
         }
         if (hasPaper(uniqueHandList) && hasScissors(uniqueHandList)) {
             return Hand.SCISSORS;
+        }
+    }
+
+    /**
+     * Update Win or Lose
+     */
+    public static updateWinOrLose({
+        userCollection,
+        numberOfWinners,
+        roundWinnerCollection,
+    }: {
+        userCollection: UserCollection;
+        numberOfWinners: number;
+        roundWinnerCollection: UserCollection;
+    }): void {
+        const alreadyWinnerCount: number = userCollection.winnerCount();
+        const roundWinnerCount: number = roundWinnerCollection.count();
+        const updateToWin: boolean = alreadyWinnerCount + roundWinnerCount <= numberOfWinners;
+
+        const roundWinnerNameList: UserName[] = roundWinnerCollection.userNameList();
+
+        if (updateToWin) {
+            userCollection.updateToWin({ roundWinnerNameList });
+        } else {
+            userCollection.updateToLose({ roundWinnerNameList });
         }
     }
 }
