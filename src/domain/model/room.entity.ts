@@ -3,7 +3,7 @@ import { Hand } from "./hand.value";
 import { RoomId } from "./room-id.value";
 import { RpsBattle, UserHand } from "./rps-battle.value";
 import { Entity } from "./shared/entity";
-import { UserCollection } from "./user-collection";
+import { UserCollection } from "./user.collection";
 import { User, UserName } from "./user.value";
 
 export type RoomProps = {
