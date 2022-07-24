@@ -13,7 +13,9 @@ export class UserHandCollection {
     }
 
     public addUserHand(userHand: UserHand): void {
-        const isAlreadyChoosed = this._userHandList.some((userHand) => userHand.userName() === userHand.userName());
+        const isAlreadyChoosed = this._userHandList.some(
+            (existUserHand) => existUserHand.userName() === userHand.userName(),
+        );
         if (isAlreadyChoosed) {
             throw new Error(`${userHand.userName()} is already choosed on this round.`);
         }
