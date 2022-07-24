@@ -79,7 +79,7 @@ export class RoomUsecase {
 
     public async judgeBattle(room: Room): Promise<RoundResult> {
         const roundResult: RoundResult = room.judgeBattle();
-        const isDraw: boolean = roundResult.roundWinnerList.length === 0;
+        const isDraw: boolean = roundResult.roundWinnerNameList.length === 0;
         if (isDraw) {
             room.startNextRound();
             await this._roomRepository.updateRpsBattleList(room);

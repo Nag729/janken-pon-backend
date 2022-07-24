@@ -24,8 +24,8 @@ export type DBRoom = {
     numberOfWinners: number;
     isStarted: boolean;
     rpsBattleList: DBRpsBattle[];
-    winnerNameList: string[];
-    loserNameList: string[];
+    confirmedWinnerNameList: string[];
+    confirmedLoserNameList: string[];
 };
 
 export class RoomRepository implements RoomRepositoryInterface {
@@ -135,8 +135,8 @@ export class RoomRepository implements RoomRepositoryInterface {
             numberOfWinners: db.numberOfWinners,
             isStarted: db.isStarted,
             rpsBattleList: db.rpsBattleList.map(this.createRpsBattleFromDB),
-            winnerNameList: db.winnerNameList,
-            loserNameList: db.loserNameList,
+            confirmedWinnerNameList: db.confirmedWinnerNameList,
+            confirmedLoserNameList: db.confirmedLoserNameList,
         });
     }
 

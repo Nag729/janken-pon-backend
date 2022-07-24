@@ -3,13 +3,9 @@ import { UserHand } from "./rps-battle.value";
 import { UserName } from "./user.value";
 
 export class RpsBattleJudgeService {
-    public static judge(userHandList: UserHand[]): UserName[] {
+    public static judgeRoundWinnerList(userHandList: UserHand[]): UserName[] {
         const winnerHand: Hand | undefined = this.winnerHand(userHandList);
-
-        const winnerNameList: UserName[] = userHandList
-            .filter((userHand) => userHand.hand === winnerHand)
-            .map((userHand) => userHand.userName);
-        return winnerNameList;
+        return userHandList.filter((userHand) => userHand.hand === winnerHand).map((userHand) => userHand.userName);
     }
 
     private static winnerHand(userHandList: UserHand[]): Hand | undefined {

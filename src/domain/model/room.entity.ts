@@ -3,6 +3,7 @@ import { Hand } from "./hand.value";
 import { RoomId } from "./room-id.value";
 import { RpsBattle, UserHand } from "./rps-battle.value";
 import { Entity } from "./shared/entity";
+import { UserCollection } from "./user-collection";
 import { User, UserName } from "./user.value";
 
 export type RoomProps = {
@@ -11,18 +12,20 @@ export type RoomProps = {
     numberOfWinners: number;
     isStarted?: boolean;
     rpsBattleList?: RpsBattle[];
-    winnerNameList?: UserName[];
-    loserNameList?: UserName[];
+    confirmedWinnerNameList?: UserName[];
+    confirmedLoserNameList?: UserName[];
 };
 
 export type RoundResult = {
-    roundWinnerList: UserName[];
+    roundWinnerNameList: UserName[];
     userHandList: UserHand[];
+    // confirmedWinnerNameList: UserName[];
+    // confirmedLoserNameList: UserName[];
 };
 
 export class Room extends Entity<RoomId> {
     // room user
-    private readonly _userList: User[];
+    private readonly _userCollection: UserCollection;
 
     // rule
     private readonly _numberOfWinners: number;
@@ -32,18 +35,29 @@ export class Room extends Entity<RoomId> {
 
     // battle
     private _rpsBattleList: RpsBattle[];
-    private _winnerNameList: string[];
-    private _loserNameList: string[];
+    private _confirmedWinnerCollection: UserCollection;
+    private _confirmedLoserCollection: UserCollection;
 
     constructor(props: RoomProps) {
+        const userNameListToUserList = (userNameList?: UserName[]): User[] => {
+            if (userNameList === undefined) return [];
+            return userNameList.map((userName) => new User({ userName }));
+        };
+
         super(props.roomId);
 
-        this._userList = props.userNameList?.map((userName) => new User({ userName }));
+        this._userCollection = new UserCollection({
+            userList: userNameListToUserList(props.userNameList),
+        });
         this._numberOfWinners = props.numberOfWinners;
         this._isStarted = props.isStarted ?? false;
         this._rpsBattleList = props.rpsBattleList ?? [];
-        this._winnerNameList = props.winnerNameList ?? [];
-        this._loserNameList = props.loserNameList ?? [];
+        this._confirmedWinnerCollection = new UserCollection({
+            userList: userNameListToUserList(props.confirmedWinnerNameList),
+        });
+        this._confirmedLoserCollection = new UserCollection({
+            userList: userNameListToUserList(props.confirmedLoserNameList),
+        });
     }
 
     /**
@@ -54,32 +68,22 @@ export class Room extends Entity<RoomId> {
     }
 
     /**
-     * User
+     * User Collection
      */
     public addUser(user: User): void {
-        const userNameList = this.userNameList();
-        if (userNameList.includes(user.userName())) {
-            return;
-        }
-        this._userList.push(user);
+        this._userCollection.addUser(user);
     }
-
     public removeUser(user: User): void {
-        const removeIndex = this.userNameList().indexOf(user.userName());
-        this._userList.splice(removeIndex, 1);
+        this._userCollection.removeUser(user);
     }
-
     public userNameList(): UserName[] {
-        return this._userList.map((user) => user.userName());
+        return this._userCollection.userNameList();
     }
-
     public isMaxPlayer(): boolean {
-        return this._userList.length === 8;
+        return this._userCollection.count() === 8;
     }
-
     public verifyUserName(userName: UserName): boolean {
-        const userNameList = this.userNameList();
-        return !userNameList.includes(userName);
+        return this._userCollection.verifyUserName(userName);
     }
 
     /**
@@ -124,7 +128,7 @@ export class Room extends Entity<RoomId> {
             return false;
         }
 
-        const isAllUserChooseHand = battle.userHandList().length === this._userList.length;
+        const isAllUserChooseHand = battle.userHandList().length === this._userCollection.count();
         return isAllUserChooseHand;
     }
 
@@ -135,8 +139,9 @@ export class Room extends Entity<RoomId> {
         }
 
         // TODO: winner, loser を記録する
+        const roundWinnerNameList: UserName[] = battle.judgeRoundWinnerList();
         return {
-            roundWinnerList: battle.judge(),
+            roundWinnerNameList,
             userHandList: battle.userHandList(),
         };
     }
@@ -150,22 +155,22 @@ export class Room extends Entity<RoomId> {
     }
 
     public isCompleted(): boolean {
-        return this._winnerNameList.length === this._numberOfWinners;
+        return this._confirmedWinnerCollection.count() === this._numberOfWinners;
     }
 
     public winnerUserNameList(): UserName[] {
-        return this._winnerNameList;
+        return this._confirmedWinnerCollection.userNameList();
     }
 
     public toRepository(): DBRoom {
         return {
             roomId: this.id.value,
-            userNameList: this._userList.map((user) => user.userName()),
+            userNameList: this._userCollection.userNameList(),
             numberOfWinners: this._numberOfWinners,
             isStarted: this._isStarted,
             rpsBattleList: this._rpsBattleList.map((battle) => battle.toObject()),
-            winnerNameList: this._winnerNameList,
-            loserNameList: this._loserNameList,
+            confirmedWinnerNameList: this._confirmedWinnerCollection.userNameList(),
+            confirmedLoserNameList: this._confirmedLoserCollection.userNameList(),
         };
     }
 }

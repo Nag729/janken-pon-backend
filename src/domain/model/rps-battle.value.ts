@@ -35,8 +35,8 @@ export class RpsBattle implements ValueObject<RpsBattleProps> {
         return this._userHandList;
     }
 
-    public judge(): UserName[] {
-        return RpsBattleJudgeService.judge(this._userHandList);
+    public judgeRoundWinnerList(): UserName[] {
+        return RpsBattleJudgeService.judgeRoundWinnerList(this._userHandList);
     }
 
     public toObject() {
