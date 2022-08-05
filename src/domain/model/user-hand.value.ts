@@ -1,6 +1,6 @@
 import { Hand } from "./hand.value";
 import { ValueObject } from "./shared/value-object";
-import { User, UserName } from "./user.value";
+import { UserName } from "./user.value";
 
 type UserHandProps = {
     userName: UserName;
@@ -13,16 +13,16 @@ export type UserHandObject = {
 };
 
 export class UserHand implements ValueObject<UserHandProps> {
-    private readonly _user: User;
+    private readonly _userName: UserName;
     private readonly _hand: Hand;
 
     constructor(props: UserHandProps) {
-        this._user = new User({ userName: props.userName });
+        this._userName = props.userName;
         this._hand = props.hand;
     }
 
     public userName(): UserName {
-        return this._user.userName();
+        return this._userName;
     }
 
     public hand(): Hand {
@@ -37,6 +37,6 @@ export class UserHand implements ValueObject<UserHandProps> {
     }
 
     isEquals(other: UserHand): boolean {
-        return this._user.isEquals(other._user) && this._hand === other._hand;
+        return this._userName === other._userName && this._hand === other._hand;
     }
 }

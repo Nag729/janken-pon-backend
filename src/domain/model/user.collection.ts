@@ -5,6 +5,8 @@ type UserCollectionProps = {
     userList: User[];
 };
 
+const MAX_USER_COUNT = 8;
+
 export class UserCollection {
     private readonly _userList: User[];
 
@@ -45,24 +47,24 @@ export class UserCollection {
         this._userList.splice(removeIndex, 1);
     }
 
-    public updateToWin({ roundWinnerNameList }: { roundWinnerNameList: UserName[] }): void {
+    public updateToWin({ roundWinnerList }: { roundWinnerList: UserName[] }): void {
         const fightingUserList: User[] = this._userList.filter((user) => user.isFighting());
         fightingUserList.forEach((user) => {
-            const isWinner = roundWinnerNameList.includes(user.userName());
+            const isWinner = roundWinnerList.includes(user.userName());
             if (isWinner) user.setToWin();
         });
     }
 
-    public updateToLose({ roundWinnerNameList }: { roundWinnerNameList: UserName[] }): void {
+    public updateToLose({ roundWinnerList }: { roundWinnerList: UserName[] }): void {
         const fightingUserList: User[] = this._userList.filter((user) => user.isFighting());
         fightingUserList.forEach((user) => {
-            const isWinner = roundWinnerNameList.includes(user.userName());
+            const isWinner = roundWinnerList.includes(user.userName());
             if (!isWinner) user.setToLose();
         });
     }
 
     public isMaxPlayer(): boolean {
-        return this._userList.length === 8;
+        return this._userList.length === MAX_USER_COUNT;
     }
 
     public verifyUserName(userName: UserName): boolean {

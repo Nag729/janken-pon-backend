@@ -12,9 +12,9 @@ export interface RoomUsecaseDependencies {
 
 export type RoomError = `NOT_EXIST_ROOM` | `ALREADY_STARTED_ROOM` | `MAX_PLAYER`;
 export type RoundResultForResponse = {
-    roundWinnerList: string[];
+    roundWinnerList: UserName[];
     userHandList: {
-        userName: string;
+        userName: UserName;
         hand: Hand;
     }[];
 };
@@ -89,11 +89,8 @@ export class RoomUsecase {
         await this._roomRepository.updateRoom(room);
 
         return {
-            roundWinnerList: roundWinnerList.map((user) => user.userName()),
-            userHandList: userHandList.map((userHand) => ({
-                userName: userHand.userName(),
-                hand: userHand.hand(),
-            })),
+            roundWinnerList,
+            userHandList: userHandList.map((userHand) => userHand.toObject()),
         };
     }
 

@@ -17,7 +17,7 @@ export type RoomProps = {
 };
 
 export type RoundResult = {
-    roundWinnerList: User[];
+    roundWinnerList: UserName[];
     userHandList: UserHand[];
 };
 
@@ -104,26 +104,21 @@ export class Room extends Entity<RoomId> {
 
     public isAllUserChooseHand(): boolean {
         const round: RpsRound = this._rpsRoundCollection.currentRound();
-        const chosenCount: number = round.chosenCount();
-
-        const fightingUserCount = this._userCollection.fightingCount();
-        return chosenCount === fightingUserCount;
+        return round.chosenCount() === this._userCollection.fightingCount();
     }
 
     public judgeRound(): RoundResult {
         const round: RpsRound = this._rpsRoundCollection.currentRound();
 
         // round result
-        const roundWinnerList: User[] = round.judgeRoundWinnerList();
+        const roundWinnerList: UserName[] = round.judgeRoundWinnerList();
         const userHandList: UserHand[] = round.userHandList();
 
         // update winOrLose
         RpsJudgeService.updateWinOrLose({
             userCollection: this._userCollection,
             numberOfWinners: this._numberOfWinners,
-            roundWinnerCollection: new UserCollection({
-                userList: roundWinnerList,
-            }),
+            roundWinnerList,
         });
 
         return {
@@ -134,8 +129,7 @@ export class Room extends Entity<RoomId> {
 
     public chosenUserNameList(): UserName[] {
         const round: RpsRound = this._rpsRoundCollection.currentRound();
-        const chosenUserList: User[] = round.chosenUserList();
-        return chosenUserList.map((user) => user.userName());
+        return round.chosenUserNameList();
     }
 
     public isCompleted(): boolean {

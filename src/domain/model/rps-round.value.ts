@@ -3,7 +3,7 @@ import { RpsJudgeService } from "./rps-judge.service";
 import { ValueObject } from "./shared/value-object";
 import { UserHandCollection } from "./user-hand.collection";
 import { UserHand } from "./user-hand.value";
-import { User } from "./user.value";
+import { User, UserName } from "./user.value";
 const equal = require("deep-equal");
 
 type RpsRoundProps = {
@@ -30,7 +30,7 @@ export class RpsRound implements ValueObject<RpsRoundProps> {
         return this._userHandCollection.count();
     }
 
-    public judgeRoundWinnerList(): User[] {
+    public judgeRoundWinnerList(): UserName[] {
         return RpsJudgeService.judgeRoundWinnerList(this._userHandCollection);
     }
 
@@ -38,8 +38,8 @@ export class RpsRound implements ValueObject<RpsRoundProps> {
         return this._userHandCollection.userHandList();
     }
 
-    public chosenUserList(): User[] {
-        return this._userHandCollection.userHandList().map((userHand) => new User({ userName: userHand.userName() }));
+    public chosenUserNameList(): UserName[] {
+        return this._userHandCollection.userHandList().map((userHand) => userHand.userName());
     }
 
     public toRepository(): DBRpsRound {
