@@ -24,7 +24,7 @@ export class RpsRoundCollection {
         return round;
     }
 
-    public startNextRound(): void {
+    public enterNextRound(): void {
         const nextRound = new RpsRound({
             round: this.roundCount() + 1,
             userHandList: [],

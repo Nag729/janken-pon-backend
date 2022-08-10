@@ -94,14 +94,14 @@ export class Room extends Entity<RoomId> {
 
     public startRps(): void {
         this._isStarted = true;
-        this.startNextRound();
+        this.enterNextRound();
     }
 
     /**
      * RPS Round
      */
-    public startNextRound(): void {
-        this._rpsRoundCollection.startNextRound();
+    public enterNextRound(): void {
+        this._rpsRoundCollection.enterNextRound();
     }
 
     public chooseHand(userHand: UserHand): void {

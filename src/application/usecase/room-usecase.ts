@@ -100,8 +100,9 @@ export class RoomUsecase {
         };
     }
 
-    public async addNextRound(room: Room): Promise<void> {
-        room.startNextRound();
+    public async enterNextRound(roomId: RoomId): Promise<void> {
+        const room: Room = await this._roomRepository.fetchShouldExistRoom(roomId);
+        room.enterNextRound();
         await this._roomRepository.updateRoom(room);
     }
 

@@ -85,6 +85,14 @@ io.on(`connection`, (socket) => {
         });
 
         /**
+         * Event: Enter Next Round
+         */
+        socket.on(`enter-next-round`, async () => {
+            await roomUsecase.enterNextRound(new RoomId(roomId));
+            io.sockets.in(roomId).emit(`next-round-entered`);
+        });
+
+        /**
          * Event: Choose Hand by User
          */
         socket.on(`choose-hand`, async ({ hand }: { hand: Hand }) => {
@@ -94,20 +102,13 @@ io.on(`connection`, (socket) => {
             });
 
             const isAllUserChooseHand: boolean = roomUsecase.isAllUserChooseHand(room);
-            if (!isAllUserChooseHand) {
-                return;
-            }
+            if (!isAllUserChooseHand) return;
 
             const roundResult: RoundResultForResponse = await roomUsecase.judgeRound(room);
-
-            if (!roomUsecase.isCompleted(room)) {
-                await roomUsecase.addNextRound(room);
-                io.sockets.in(roomId).emit(`round-settled`, { roundResult });
-                return;
-            }
-
             const winnerUserNameList = roomUsecase.winnerUserNameList(room);
-            io.sockets.in(roomId).emit(`rps-completed`, { roundResult, winnerUserNameList });
+
+            const emitEventName = !roomUsecase.isCompleted(room) ? `round-settled` : `rps-completed`;
+            io.sockets.in(roomId).emit(emitEventName, { roundResult, winnerUserNameList });
         });
 
         /**
