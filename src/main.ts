@@ -38,10 +38,8 @@ app.post(`/generate/room-id`, async (_, res) => {
 });
 
 app.post(`/create/room`, async (req, res) => {
-    const numberOfWinners = 1; // FIXME: フロントエンドから受け取る
-
     const { roomId } = req.body as { roomId: string };
-    await roomUsecase.createRoom(new RoomId(roomId), numberOfWinners);
+    await roomUsecase.createRoom(new RoomId(roomId));
     res.send(`🚀 ROOM CREATED: ${roomId} 🚀`);
 });
 
@@ -72,9 +70,19 @@ io.on(`connection`, (socket) => {
         io.sockets.in(roomId).emit(`user-name-list-updated`, { userNameList });
 
         /**
+         * Event: Update Number of Winners
+         */
+        socket.on(`update-number-of-winners`, async ({ numberOfWinners }: { numberOfWinners: number }) => {
+            io.sockets.in(roomId).emit(`number-of-winners-updated`, { numberOfWinners });
+        });
+
+        /**
          * Event: Start RPS
          */
-        socket.on(`start-rps`, async () => {
+        socket.on(`start-rps`, async ({ numberOfWinners }: { numberOfWinners: number }) => {
+            console.log(`*** numberOfWinners ***`, numberOfWinners);
+            // TODO: numberOfWinners を更新する!!
+            // await roomUsecase.updateNumberOfWinners(new RoomId(roomId), numberOfWinners);
             await roomUsecase.startRps(new RoomId(roomId));
             io.sockets.in(roomId).emit(`rps-started`);
         });

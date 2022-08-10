@@ -11,7 +11,7 @@ import { User, UserName } from "./user.value";
 export type RoomProps = {
     roomId: RoomId;
     userList: User[];
-    numberOfWinners: number;
+    numberOfWinners?: number;
     isStarted?: boolean;
     rpsRoundList?: RpsRound[];
 };
@@ -26,7 +26,7 @@ export class Room extends Entity<RoomId> {
     private _userCollection: UserCollection;
 
     // rule
-    private readonly _numberOfWinners: number;
+    private _numberOfWinners: number;
 
     // room status
     private _isStarted: boolean;
@@ -40,7 +40,7 @@ export class Room extends Entity<RoomId> {
         this._userCollection = new UserCollection({
             userList: props.userList,
         });
-        this._numberOfWinners = props.numberOfWinners;
+        this._numberOfWinners = props.numberOfWinners ?? 1;
         this._isStarted = props.isStarted ?? false;
         this._rpsRoundCollection = new RpsRoundCollection({
             rpsRoundList: props.rpsRoundList ?? [],

@@ -30,8 +30,8 @@ export class RoomUsecase {
         return this._roomRepository.generateNewRoomId();
     }
 
-    public async createRoom(roomId: RoomId, numberOfWinners: number): Promise<void> {
-        const newRoom: Room = new Room({ roomId, userList: [], numberOfWinners });
+    public async createRoom(roomId: RoomId): Promise<void> {
+        const newRoom: Room = new Room({ roomId, userList: [] });
         await this._roomRepository.createRoom(newRoom);
     }
 
