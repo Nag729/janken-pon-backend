@@ -79,6 +79,13 @@ export class Room extends Entity<RoomId> {
     }
 
     /**
+     * Number of Winners
+     */
+    public updateNumberOfWinners(numberOfWinners: number): void {
+        this._numberOfWinners = numberOfWinners;
+    }
+
+    /**
      * Room Status
      */
     public isStarted(): boolean {

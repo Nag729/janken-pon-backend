@@ -63,10 +63,16 @@ export class RoomUsecase {
         return room.userNameList();
     }
 
-    public async startRps(roomId: RoomId): Promise<void> {
+    public async updateNumberOfWinners(roomId: RoomId, numberOfWinners: number): Promise<Room> {
         const room: Room = await this._roomRepository.fetchShouldExistRoom(roomId);
+        room.updateNumberOfWinners(numberOfWinners);
+        await this._roomRepository.updateRoom(room);
+        return room;
+    }
+
+    public async startRps(room: Room): Promise<void> {
         if (room.isStarted()) {
-            throw new Error(`Already started roomId: ${roomId.value}`);
+            throw new Error(`Already started roomId: ${room.id.value}`);
         }
 
         room.startRps();

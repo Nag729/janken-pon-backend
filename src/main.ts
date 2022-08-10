@@ -80,10 +80,8 @@ io.on(`connection`, (socket) => {
          * Event: Start RPS
          */
         socket.on(`start-rps`, async ({ numberOfWinners }: { numberOfWinners: number }) => {
-            console.log(`*** numberOfWinners ***`, numberOfWinners);
-            // TODO: numberOfWinners を更新する!!
-            // await roomUsecase.updateNumberOfWinners(new RoomId(roomId), numberOfWinners);
-            await roomUsecase.startRps(new RoomId(roomId));
+            const room: Room = await roomUsecase.updateNumberOfWinners(new RoomId(roomId), numberOfWinners);
+            await roomUsecase.startRps(room);
             io.sockets.in(roomId).emit(`rps-started`);
         });
 

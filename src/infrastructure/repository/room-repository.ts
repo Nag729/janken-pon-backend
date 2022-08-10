@@ -104,10 +104,15 @@ export class RoomRepository implements RoomRepositoryInterface {
 
         const newDBRoom: DBRoom = room.toRepository();
 
-        // check diff
+        // check diff & update
         const updatedUserList: boolean = !equal(oldDBRoom.userList, newDBRoom.userList);
         if (updatedUserList) {
             await this.updateRoomUserList(room.id.value, newDBRoom.userList);
+        }
+
+        const updatedNumberOfWinners: boolean = oldDBRoom.numberOfWinners !== newDBRoom.numberOfWinners;
+        if (updatedNumberOfWinners) {
+            await this.updateRoomNumberOfWinners(room.id.value, newDBRoom.numberOfWinners);
         }
 
         const updatedIsStarted: boolean = oldDBRoom.isStarted !== newDBRoom.isStarted;
@@ -124,6 +129,12 @@ export class RoomRepository implements RoomRepositoryInterface {
     private async updateRoomUserList(roomId: string, userList: DBUser[]): Promise<void> {
         await this.datastore.update(this.tableName, { roomId }, `set userList = :userList`, {
             ":userList": userList,
+        });
+    }
+
+    private async updateRoomNumberOfWinners(roomId: string, numberOfWinners: number): Promise<void> {
+        await this.datastore.update(this.tableName, { roomId }, `set numberOfWinners = :numberOfWinners`, {
+            ":numberOfWinners": numberOfWinners,
         });
     }
 
