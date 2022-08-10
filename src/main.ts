@@ -59,12 +59,11 @@ app.post(`/verify/user-name`, async (req, res) => {
  * Socket.io
  */
 io.on(`connection`, (socket) => {
-    console.log(`NEW USER CONNECTED ✌️`);
-
     /**
      * Event: Joins to Socket.IO Room
      */
     socket.on(`room`, async ({ roomId, userName }: { roomId: string; userName: string }) => {
+        console.log(`NEW USER ${userName} JOIN TO ROOM ✌️`);
         socket.join(roomId);
         const userNameList: string[] = await roomUsecase.joinRoom(new RoomId(roomId), userName);
         io.sockets.in(roomId).emit(`user-name-list-updated`, { userNameList });
