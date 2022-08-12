@@ -101,6 +101,7 @@ io.on(`connection`, (socket) => {
                 userNameList: room.chosenUserNameList(),
             });
 
+            // TODO: ここの判定が不安定になっていそう
             const isAllUserChooseHand: boolean = roomUsecase.isAllUserChooseHand(room);
             if (!isAllUserChooseHand) return;
 
