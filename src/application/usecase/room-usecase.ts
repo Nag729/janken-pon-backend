@@ -83,11 +83,13 @@ export class RoomUsecase {
         return room.isAllUserChooseHand();
     }
 
-    public async judgeRound(room: Room): Promise<UserHandObject[]> {
-        // NOTE: `roundWinnerList` は使わない
-        const { userHandList } = room.judgeRound();
+    public async judgeRound(room: Room): Promise<{ roundWinnerList: UserName[]; userHandList: UserHandObject[] }> {
+        const { roundWinnerList, userHandList } = room.judgeRound();
         await this._roomRepository.updateRoom(room);
-        return userHandList.map((userHand) => userHand.toObject());
+        return {
+            roundWinnerList,
+            userHandList: userHandList.map((userHand) => userHand.toObject()),
+        };
     }
 
     public async enterNextRound(roomId: RoomId): Promise<void> {
