@@ -25,8 +25,8 @@ export class DynamoDBDataStore {
         const config = {
             endpoint: process.env.DYNAMO_DB_URL,
             region: process.env.DYNAMO_DB_REGION,
-            accessKeyId: process.env.DYNAMO_ACCESS_KEY_ID,
-            secretAccessKey: process.env.DYNAMO_SECRET_ACCESS_KEY,
+            accessKeyId: process.env.JANKEN_PON_DYNAMO_ACCESS_KEY_ID,
+            secretAccessKey: process.env.JANKEN_PON_DYNAMO_SECRET_ACCESS_KEY,
         };
         this._docClient = new AWS.DynamoDB.DocumentClient(config);
     }

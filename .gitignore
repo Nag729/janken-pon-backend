@@ -12,12 +12,10 @@ Desktop.ini
 .directory
 *~
 
-
 # npm
 node_modules
 *.log
 *.gz
-
 
 # Coveralls
 coverage
