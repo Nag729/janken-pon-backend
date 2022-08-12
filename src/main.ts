@@ -2,7 +2,7 @@ import cors from "cors";
 import express from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
-import { RoomError, RoomUsecase, RoundResultForResponse } from "./application/usecase/room-usecase";
+import { RoomError, RoomUsecase } from "./application/usecase/room-usecase";
 import { Hand } from "./domain/model/hand.value";
 import { RoomId } from "./domain/model/room-id.value";
 import { Room } from "./domain/model/room.entity";
@@ -104,11 +104,14 @@ io.on(`connection`, (socket) => {
             const isAllUserChooseHand: boolean = roomUsecase.isAllUserChooseHand(room);
             if (!isAllUserChooseHand) return;
 
-            const roundResult: RoundResultForResponse = await roomUsecase.judgeRound(room);
-            const winnerUserNameList = roomUsecase.winnerUserNameList(room);
-
+            const roundResult = await roomUsecase.judgeRound(room);
             const emitEventName = !roomUsecase.isCompleted(room) ? `round-settled` : `rps-completed`;
-            io.sockets.in(roomId).emit(emitEventName, { roundResult, winnerUserNameList });
+
+            io.sockets.in(roomId).emit(emitEventName, {
+                roundResult,
+                winnerNameList: roomUsecase.winnerNameList(room),
+                loserNameList: roomUsecase.loserNameList(room),
+            });
         });
 
         /**

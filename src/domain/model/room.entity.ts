@@ -143,8 +143,12 @@ export class Room extends Entity<RoomId> {
         return this._userCollection.winnerCount() === this._numberOfWinners;
     }
 
-    public winnerUserNameList(): UserName[] {
-        return this._userCollection.winnerUserNameList();
+    public winnerNameList(): UserName[] {
+        return this._userCollection.winnerNameList();
+    }
+
+    public loserNameList(): UserName[] {
+        return this._userCollection.loserNameList();
     }
 
     public toRepository(): DBRoom {

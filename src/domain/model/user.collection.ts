@@ -30,8 +30,12 @@ export class UserCollection {
         return this._userList.filter((user) => user.isWin()).length;
     }
 
-    public winnerUserNameList(): UserName[] {
+    public winnerNameList(): UserName[] {
         return this._userList.filter((user) => user.isWin()).map((user) => user.userName());
+    }
+
+    public loserNameList(): UserName[] {
+        return this._userList.filter((user) => user.isLose()).map((user) => user.userName());
     }
 
     public addUser(user: User): void {

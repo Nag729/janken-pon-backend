@@ -110,7 +110,11 @@ export class RoomUsecase {
         return room.isCompleted();
     }
 
-    public winnerUserNameList(room: Room): UserName[] {
-        return room.winnerUserNameList();
+    public winnerNameList(room: Room): UserName[] {
+        return room.winnerNameList();
+    }
+
+    public loserNameList(room: Room): UserName[] {
+        return room.loserNameList();
     }
 }
