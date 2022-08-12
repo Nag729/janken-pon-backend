@@ -2,7 +2,7 @@ import { RoomRepositoryInterface } from "../../domain/interface/room-repository.
 import { Hand } from "../../domain/model/hand.value";
 import { RoomId } from "../../domain/model/room-id.value";
 import { Room } from "../../domain/model/room.entity";
-import { UserHand } from "../../domain/model/user-hand.value";
+import { UserHand, UserHandObject } from "../../domain/model/user-hand.value";
 import { User, UserName } from "../../domain/model/user.value";
 import { RoomRepository } from "../../infrastructure/repository/room-repository";
 
@@ -11,13 +11,6 @@ export interface RoomUsecaseDependencies {
 }
 
 export type RoomError = `NOT_EXIST_ROOM` | `ALREADY_STARTED_ROOM` | `MAX_PLAYER`;
-export type RoundResultForResponse = {
-    roundWinnerList: UserName[];
-    userHandList: {
-        userName: UserName;
-        hand: Hand;
-    }[];
-};
 
 export class RoomUsecase {
     private readonly _roomRepository: RoomRepositoryInterface;
@@ -90,14 +83,11 @@ export class RoomUsecase {
         return room.isAllUserChooseHand();
     }
 
-    public async judgeRound(room: Room): Promise<RoundResultForResponse> {
-        const { roundWinnerList, userHandList } = room.judgeRound();
+    public async judgeRound(room: Room): Promise<UserHandObject[]> {
+        // NOTE: `roundWinnerList` は使わない
+        const { userHandList } = room.judgeRound();
         await this._roomRepository.updateRoom(room);
-
-        return {
-            roundWinnerList,
-            userHandList: userHandList.map((userHand) => userHand.toObject()),
-        };
+        return userHandList.map((userHand) => userHand.toObject());
     }
 
     public async enterNextRound(roomId: RoomId): Promise<void> {
@@ -110,11 +100,11 @@ export class RoomUsecase {
         return room.isCompleted();
     }
 
-    public winnerNameList(room: Room): UserName[] {
-        return room.winnerNameList();
+    public winnerList(room: Room): UserName[] {
+        return room.winnerList();
     }
 
-    public loserNameList(room: Room): UserName[] {
-        return room.loserNameList();
+    public loserList(room: Room): UserName[] {
+        return room.loserList();
     }
 }

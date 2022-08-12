@@ -104,13 +104,13 @@ io.on(`connection`, (socket) => {
             const isAllUserChooseHand: boolean = roomUsecase.isAllUserChooseHand(room);
             if (!isAllUserChooseHand) return;
 
-            const roundResult = await roomUsecase.judgeRound(room);
+            const userHandList = await roomUsecase.judgeRound(room);
             const emitEventName = !roomUsecase.isCompleted(room) ? `round-settled` : `rps-completed`;
 
             io.sockets.in(roomId).emit(emitEventName, {
-                roundResult,
-                winnerNameList: roomUsecase.winnerNameList(room),
-                loserNameList: roomUsecase.loserNameList(room),
+                userHandList,
+                winnerList: roomUsecase.winnerList(room),
+                loserList: roomUsecase.loserList(room),
             });
         });
 
