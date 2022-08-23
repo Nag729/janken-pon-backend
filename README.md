@@ -9,4 +9,5 @@
 ## Links
 
 - [Janken Pon!](https://janken-pon.vercel.app/)
+- [Qiita - Next.js x Express x Socket.IO でリアルタイムなじゃんけんアプリをつくってみた ✌️](https://qiita.com/Nag729/items/12d7099417850b6965ed)
 - [GitHub - janken-pon](https://github.com/Nag729/janken-pon)
