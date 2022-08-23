@@ -24,3 +24,4 @@ coverage
 benchmarks/graphs
 
 /dist
+.env
