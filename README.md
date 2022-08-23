@@ -1,3 +1,5 @@
 # Janken-Pon Backend
 
-- this project is created by Express.
+## About this project:
+
+- https://janken-pon.vercel.app/about
