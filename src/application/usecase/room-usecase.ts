@@ -51,6 +51,10 @@ export class RoomUsecase {
 
     public async leaveRoom(roomId: RoomId, userName: UserName): Promise<UserName[]> {
         const room: Room = await this._roomRepository.fetchShouldExistRoom(roomId);
+        if (room.isCompleted()) {
+            return room.userNameList();
+        }
+
         room.removeUser(new User({ userName }));
         await this._roomRepository.updateRoom(room);
         return room.userNameList();
@@ -94,6 +98,9 @@ export class RoomUsecase {
 
     public async enterNextRound(roomId: RoomId): Promise<void> {
         const room: Room = await this._roomRepository.fetchShouldExistRoom(roomId);
+        if (!room.isAllUserChooseHand()) {
+            return;
+        }
         room.enterNextRound();
         await this._roomRepository.updateRoom(room);
     }

@@ -1,3 +1,4 @@
+import { queue } from "async";
 import cors from "cors";
 import express from "express";
 import { createServer } from "http";
@@ -26,6 +27,36 @@ const PORT = process.env.PORT || 3001;
  * Usecase
  */
 const roomUsecase = new RoomUsecase({});
+
+/**
+ * Queue
+ */
+const enterRoomJobQueue = queue(async (roomId: string) => {
+    await roomUsecase.enterNextRound(new RoomId(roomId));
+    io.sockets.in(roomId).emit(`next-round-entered`);
+}, 1);
+
+const chooseHandQueue = queue(async ({ roomId, userName, hand }: { roomId: string; userName: string; hand: Hand }) => {
+    const room: Room = await roomUsecase.chooseHand(new RoomId(roomId), userName, hand);
+    io.sockets.in(roomId).emit(`rps-hand-chosen`, {
+        userNameList: room.chosenUserNameList(),
+    });
+
+    const isAllUserChooseHand: boolean = roomUsecase.isAllUserChooseHand(room);
+    if (!isAllUserChooseHand) {
+        return;
+    }
+
+    const { roundWinnerList, userHandList } = await roomUsecase.judgeRound(room);
+    const emitEventName = !roomUsecase.isCompleted(room) ? `round-settled` : `rps-completed`;
+
+    io.sockets.in(roomId).emit(emitEventName, {
+        roundWinnerList,
+        userHandList,
+        winnerList: roomUsecase.winnerList(room),
+        loserList: roomUsecase.loserList(room),
+    });
+}, 1);
 
 app.get(`/`, (_, res) => {
     res.send(`🚀 Server listening on port:${PORT} 🚀`);
@@ -88,32 +119,14 @@ io.on(`connection`, (socket) => {
          * Event: Enter Next Round
          */
         socket.on(`enter-next-round`, async () => {
-            await roomUsecase.enterNextRound(new RoomId(roomId));
-            io.sockets.in(roomId).emit(`next-round-entered`);
+            enterRoomJobQueue.push(roomId);
         });
 
         /**
          * Event: Choose Hand by User
          */
         socket.on(`choose-hand`, async ({ hand }: { hand: Hand }) => {
-            const room: Room = await roomUsecase.chooseHand(new RoomId(roomId), userName, hand);
-            io.sockets.in(roomId).emit(`rps-hand-chosen`, {
-                userNameList: room.chosenUserNameList(),
-            });
-
-            // TODO: ここの判定が不安定になっていそう
-            const isAllUserChooseHand: boolean = roomUsecase.isAllUserChooseHand(room);
-            if (!isAllUserChooseHand) return;
-
-            const { roundWinnerList, userHandList } = await roomUsecase.judgeRound(room);
-            const emitEventName = !roomUsecase.isCompleted(room) ? `round-settled` : `rps-completed`;
-
-            io.sockets.in(roomId).emit(emitEventName, {
-                roundWinnerList,
-                userHandList,
-                winnerList: roomUsecase.winnerList(room),
-                loserList: roomUsecase.loserList(room),
-            });
+            chooseHandQueue.push({ roomId, userName, hand });
         });
 
         /**
