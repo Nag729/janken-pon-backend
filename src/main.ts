@@ -24,9 +24,40 @@ const io = new Server(httpServer, {
 const PORT = process.env.PORT || 3001;
 
 /**
- * Usecase
+ * Dependent Usecase
  */
 const roomUsecase = new RoomUsecase({});
+
+/**
+ * REST API
+ */
+app.get(`/`, (_, res) => {
+    res.send(`🚀 Server listening on port:${PORT} 🚀`);
+});
+
+app.post(`/generate/room-id`, async (_, res) => {
+    const newRoomId: RoomId = await roomUsecase.generateNewRoomId();
+    console.log(`🚀 ROOM_ID GENERATED: ${newRoomId.value} 🚀`);
+    res.send(newRoomId.value);
+});
+
+app.post(`/create/room`, async (req, res) => {
+    const { roomId } = req.body as { roomId: string };
+    await roomUsecase.createRoom(new RoomId(roomId));
+    res.send(`🚀 ROOM CREATED: ${roomId} 🚀`);
+});
+
+app.post(`/verify/room`, async (req, res) => {
+    const { roomId } = req.body as { roomId: string };
+    const errorList: RoomError[] = await roomUsecase.verifyRoom(new RoomId(roomId));
+    res.send(errorList);
+});
+
+app.post(`/verify/user-name`, async (req, res) => {
+    const { roomId, userName } = req.body as { roomId: string; userName: string };
+    const isOk: boolean = await roomUsecase.verifyUserName(new RoomId(roomId), userName);
+    res.send(isOk);
+});
 
 /**
  * Queue
@@ -57,34 +88,6 @@ const chooseHandQueue = queue(async ({ roomId, userName, hand }: { roomId: strin
         loserList: roomUsecase.loserList(room),
     });
 }, 1);
-
-app.get(`/`, (_, res) => {
-    res.send(`🚀 Server listening on port:${PORT} 🚀`);
-});
-
-app.post(`/generate/room-id`, async (_, res) => {
-    const newRoomId: RoomId = await roomUsecase.generateNewRoomId();
-    console.log(`🚀 ROOM_ID GENERATED: ${newRoomId.value} 🚀`);
-    res.send(newRoomId.value);
-});
-
-app.post(`/create/room`, async (req, res) => {
-    const { roomId } = req.body as { roomId: string };
-    await roomUsecase.createRoom(new RoomId(roomId));
-    res.send(`🚀 ROOM CREATED: ${roomId} 🚀`);
-});
-
-app.post(`/verify/room`, async (req, res) => {
-    const { roomId } = req.body as { roomId: string };
-    const errorList: RoomError[] = await roomUsecase.verifyRoom(new RoomId(roomId));
-    res.send(errorList);
-});
-
-app.post(`/verify/user-name`, async (req, res) => {
-    const { roomId, userName } = req.body as { roomId: string; userName: string };
-    const isOk: boolean = await roomUsecase.verifyUserName(new RoomId(roomId), userName);
-    res.send(isOk);
-});
 
 /**
  * Socket.io
