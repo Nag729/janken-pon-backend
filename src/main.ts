@@ -1,9 +1,9 @@
-import { queue } from "async";
 import cors from "cors";
 import express from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
-import { RoomError, RoomUsecase } from "./application/usecase/room-usecase";
+import { RestApiController } from "./application/controller/rest-api-controller";
+import { RoomUsecase } from "./application/usecase/room-usecase";
 import { Hand } from "./domain/model/hand.value";
 import { RoomId } from "./domain/model/room-id.value";
 import { Room } from "./domain/model/room.entity";
@@ -24,8 +24,9 @@ const io = new Server(httpServer, {
 const PORT = process.env.PORT || 3001;
 
 /**
- * Dependent Usecase
+ * Dependent Controller
  */
+const restApiController = new RestApiController({});
 const roomUsecase = new RoomUsecase({});
 
 /**
@@ -34,69 +35,20 @@ const roomUsecase = new RoomUsecase({});
 app.get(`/`, (_, res) => {
     res.send(`🚀 Server listening on port:${PORT} 🚀`);
 });
-
-app.post(`/generate/room-id`, async (_, res) => {
-    const newRoomId: RoomId = await roomUsecase.generateNewRoomId();
-    console.log(`🚀 ROOM_ID GENERATED: ${newRoomId.value} 🚀`);
-    res.send(newRoomId.value);
-});
-
-app.post(`/create/room`, async (req, res) => {
-    const { roomId } = req.body as { roomId: string };
-    await roomUsecase.createRoom(new RoomId(roomId));
-    res.send(`🚀 ROOM CREATED: ${roomId} 🚀`);
-});
-
-app.post(`/verify/room`, async (req, res) => {
-    const { roomId } = req.body as { roomId: string };
-    const errorList: RoomError[] = await roomUsecase.verifyRoom(new RoomId(roomId));
-    res.send(errorList);
-});
-
-app.post(`/verify/user-name`, async (req, res) => {
-    const { roomId, userName } = req.body as { roomId: string; userName: string };
-    const isOk: boolean = await roomUsecase.verifyUserName(new RoomId(roomId), userName);
-    res.send(isOk);
-});
-
-/**
- * Queue
- */
-const enterRoomJobQueue = queue(async (roomId: string) => {
-    await roomUsecase.enterNextRound(new RoomId(roomId));
-    io.sockets.in(roomId).emit(`next-round-entered`);
-}, 1);
-
-const chooseHandQueue = queue(async ({ roomId, userName, hand }: { roomId: string; userName: string; hand: Hand }) => {
-    const room: Room = await roomUsecase.chooseHand(new RoomId(roomId), userName, hand);
-    io.sockets.in(roomId).emit(`rps-hand-chosen`, {
-        userNameList: room.chosenUserNameList(),
-    });
-
-    if (!roomUsecase.isAllUserChooseHand(room)) {
-        return;
-    }
-
-    const { roundWinnerList, userHandList } = await roomUsecase.judgeRound(room);
-    const emitEventName = !roomUsecase.isCompleted(room) ? `round-settled` : `rps-completed`;
-
-    io.sockets.in(roomId).emit(emitEventName, {
-        roundWinnerList,
-        userHandList,
-        winnerList: roomUsecase.winnerList(room),
-        loserList: roomUsecase.loserList(room),
-    });
-}, 1);
+app.post(`/generate/room-id`, restApiController.generateNewRoomId);
+app.post(`/create/room`, restApiController.createRoom);
+app.post(`/verify/room`, restApiController.verifyRoom);
+app.post(`/verify/user-name`, restApiController.verifyUserName);
 
 /**
  * Socket.io
  */
 io.on(`connection`, (socket) => {
-    /**
-     * Event: Joins to Socket.IO Room
-     */
     socket.on(`room`, async ({ roomId, userName }: { roomId: string; userName: string }) => {
         console.log(`NEW USER ${userName} JOIN TO ROOM ✌️`);
+        /**
+         * Event: Joins to Socket.IO Room
+         */
         socket.join(roomId);
         const userNameList: string[] = await roomUsecase.joinRoom(new RoomId(roomId), userName);
         io.sockets.in(roomId).emit(`user-name-list-updated`, { userNameList });
@@ -121,14 +73,32 @@ io.on(`connection`, (socket) => {
          * Event: Enter Next Round
          */
         socket.on(`enter-next-round`, async () => {
-            enterRoomJobQueue.push(roomId);
+            await roomUsecase.enterNextRound(new RoomId(roomId));
+            io.sockets.in(roomId).emit(`next-round-entered`);
         });
 
         /**
          * Event: Choose Hand by User
          */
         socket.on(`choose-hand`, async ({ hand }: { hand: Hand }) => {
-            chooseHandQueue.push({ roomId, userName, hand });
+            const room: Room = await roomUsecase.chooseHand(new RoomId(roomId), userName, hand);
+            io.sockets.in(roomId).emit(`rps-hand-chosen`, {
+                userNameList: room.chosenUserNameList(),
+            });
+
+            if (!roomUsecase.isAllUserChooseHand(room)) {
+                return;
+            }
+
+            const { roundWinnerList, userHandList } = await roomUsecase.judgeRound(room);
+            const emitEventName = !roomUsecase.isCompleted(room) ? `round-settled` : `rps-completed`;
+
+            io.sockets.in(roomId).emit(emitEventName, {
+                roundWinnerList,
+                userHandList,
+                winnerList: roomUsecase.winnerList(room),
+                loserList: roomUsecase.loserList(room),
+            });
         });
 
         /**
@@ -136,7 +106,6 @@ io.on(`connection`, (socket) => {
          */
         socket.on(`disconnect`, async () => {
             console.log(`USER DISCONNECTED 👋`, roomId, userName);
-            // NOTE: notify other users in the room.
             const userNameList: string[] = await roomUsecase.leaveRoom(new RoomId(roomId), userName);
             io.sockets.in(roomId).emit(`user-name-list-updated`, { userNameList });
         });
