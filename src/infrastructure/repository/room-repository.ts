@@ -79,11 +79,8 @@ export class RoomRepository implements RoomRepositoryInterface {
         let roomId: RoomId;
 
         for (let i = 0; i < 3; i++) {
-            roomId = new RoomId(
-                randomstring.generate({
-                    length: 6,
-                }),
-            );
+            const idCandidate: string = randomstring.generate({ length: 6 });
+            roomId = new RoomId(idCandidate);
             const existRoom: boolean = !!(await this.fetchRoom(roomId));
             if (!existRoom) break;
         }
