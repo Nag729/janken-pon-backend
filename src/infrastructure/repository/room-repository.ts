@@ -1,5 +1,5 @@
 import dayjs from "dayjs";
-import { v4 as uuidv4 } from "uuid";
+import randomstring from "randomstring";
 import { RoomRepositoryInterface } from "../../domain/interface/room-repository.interface";
 import { Hand } from "../../domain/model/hand.value";
 import { RoomId } from "../../domain/model/room-id.value";
@@ -8,7 +8,7 @@ import { RpsRound } from "../../domain/model/rps-round.value";
 import { UserHand } from "../../domain/model/user-hand.value";
 import { User, WinOrLose } from "../../domain/model/user.value";
 import { DynamoDBDataStore, QueryResult } from "../datastore/dynamodb.datastore";
-const equal = require("deep-equal");
+import deepEqual = require("deep-equal");
 
 interface RoomRepositoryDependencies {
     dynamoDBDataStore?: DynamoDBDataStore;
@@ -79,7 +79,11 @@ export class RoomRepository implements RoomRepositoryInterface {
         let roomId: RoomId;
 
         for (let i = 0; i < 3; i++) {
-            roomId = new RoomId(uuidv4());
+            roomId = new RoomId(
+                randomstring.generate({
+                    length: 6,
+                }),
+            );
             const existRoom: boolean = !!(await this.fetchRoom(roomId));
             if (!existRoom) break;
         }
@@ -105,7 +109,7 @@ export class RoomRepository implements RoomRepositoryInterface {
         const newDBRoom: DBRoom = room.toRepository();
 
         // check diff & update
-        const updatedUserList: boolean = !equal(oldDBRoom.userList, newDBRoom.userList);
+        const updatedUserList: boolean = !deepEqual(oldDBRoom.userList, newDBRoom.userList);
         if (updatedUserList) {
             await this.updateRoomUserList(room.id.value, newDBRoom.userList);
         }
@@ -120,7 +124,7 @@ export class RoomRepository implements RoomRepositoryInterface {
             await this.updateRoomStarted(room.id.value, newDBRoom.isStarted);
         }
 
-        const updatedRpsRoundList: boolean = !equal(oldDBRoom.rpsRoundList, newDBRoom.rpsRoundList);
+        const updatedRpsRoundList: boolean = !deepEqual(oldDBRoom.rpsRoundList, newDBRoom.rpsRoundList);
         if (updatedRpsRoundList) {
             await this.updateRpsRoundList(room.id.value, newDBRoom.rpsRoundList);
         }
