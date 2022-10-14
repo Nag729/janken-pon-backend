@@ -73,8 +73,7 @@ const chooseHandQueue = queue(async ({ roomId, userName, hand }: { roomId: strin
         userNameList: room.chosenUserNameList(),
     });
 
-    const isAllUserChooseHand: boolean = roomUsecase.isAllUserChooseHand(room);
-    if (!isAllUserChooseHand) {
+    if (!roomUsecase.isAllUserChooseHand(room)) {
         return;
     }
 
