@@ -2,7 +2,7 @@ import { Hand } from "./hand.value";
 import { ValueObject } from "./shared/value-object";
 import { UserName } from "./user.value";
 
-type UserHandProps = {
+export type UserHandProps = {
     userName: UserName;
     hand: Hand;
 };
