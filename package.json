@@ -7,31 +7,30 @@
     "url": "https://github.com/Nag729/janken-pon-backend/issues"
   },
   "dependencies": {
-    "async": "^3.2.4",
-    "aws-sdk": "^2.1176.0",
+    "@aws-sdk/client-dynamodb": "^3.948.0",
+    "@aws-sdk/lib-dynamodb": "^3.948.0",
+    "async": "^3.2.6",
     "cors": "^2.8.5",
-    "dayjs": "^1.11.3",
-    "deep-equal": "^2.0.5",
-    "dotenv": "^10.0.0",
-    "express": "^4.17.2",
-    "randomstring": "^1.2.2",
-    "socket.io": "^4.4.0",
-    "tsc": "^2.0.4",
-    "typescript": "^4.7.4"
+    "dayjs": "^1.11.19",
+    "deep-equal": "^2.2.3",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "randomstring": "^1.3.1",
+    "socket.io": "^4.8.1"
   },
   "devDependencies": {
-    "@types/async": "^3.2.15",
-    "@types/deep-equal": "^1.0.1",
-    "@types/express": "^4.17.13",
-    "@types/jest": "^29.5.4",
-    "@types/node": "^17.0.4",
-    "@types/randomstring": "^1.1.8",
-    "@types/socket.io": "^3.0.2",
-    "jest": "^29.6.4",
-    "rimraf": "^3.0.2",
-    "ts-jest": "^29.1.1",
-    "ts-node": "^10.9.1",
-    "ts-node-dev": "^2.0.0"
+    "@types/async": "^3.2.25",
+    "@types/deep-equal": "^1.0.4",
+    "@types/express": "^5.0.6",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^25.0.1",
+    "@types/randomstring": "^1.3.0",
+    "jest": "^30.2.0",
+    "rimraf": "^6.1.2",
+    "ts-jest": "^29.4.6",
+    "ts-node": "^10.9.2",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.9.3"
   },
   "homepage": "https://github.com/Nag729/janken-pon-backend#readme",
   "license": "ISC",
@@ -45,5 +44,8 @@
     "build": "rimraf dist && tsc",
     "start": "npm run build && node dist/main.js",
     "test": "jest"
+  },
+  "volta": {
+    "node": "24.12.0"
   }
 }
